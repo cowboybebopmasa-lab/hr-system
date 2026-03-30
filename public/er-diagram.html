@@ -13,14 +13,14 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
 #canvas{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
 
 /* === SVG矢印レイヤー === */
-#arrows{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+#arrows{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;z-index:0}
 .arrow-line{stroke:#94a3b8;stroke-width:2;fill:none}
 .arrow-head{fill:#94a3b8}
 .arrow-label{font-size:11px;font-family:"Segoe UI",system-ui,sans-serif;fill:#64748b;font-weight:700}
 .arrow-fk{font-size:9px;font-family:"Segoe UI",system-ui,sans-serif;fill:#94a3b8}
 
 /* === テーブルカード === */
-.tbl{position:absolute;border-radius:8px;overflow:hidden;border:2px solid;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12);min-width:220px;max-width:280px}
+.tbl{position:absolute;border-radius:8px;overflow:hidden;border:2px solid;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12);min-width:220px;max-width:280px;z-index:1}
 .tbl-head{padding:5px 10px;font-size:12px;font-weight:800;color:#fff;white-space:nowrap}
 .tbl-head small{font-weight:400;opacity:.85;font-size:10px;margin-left:4px}
 .tbl-row{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:3px;padding:2px 8px;border-bottom:1px solid #f1f5f9;font-size:11px}
@@ -130,14 +130,14 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
 
 <!-- メインビューポート -->
 <div id="viewport">
-  <svg id="arrows"></svg>
   <div id="canvas">
+    <svg id="arrows"></svg>
 
     <!-- ═══════════════════════════════════════
          employees — 全テーブルの中心ハブ
          contracts / attendance / payroll / evaluations / expenses が 1:N で参照
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-employee" id="tbl-employees" style="left:500px;top:280px">
+    <div class="tbl tbl-employee" id="tbl-employees" style="left:580px;top:380px">
       <div class="tbl-head">👥 employees <small>従業員・派遣スタッフ</small></div>
       <div class="tbl-section">基本情報</div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
@@ -165,7 +165,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          contracts — endDate で Cron アラート発火
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-contract" id="tbl-contracts" style="left:880px;top:60px">
+    <div class="tbl tbl-contract" id="tbl-contracts" style="left:1020px;top:60px">
       <div class="tbl-head">📋 contracts <small>派遣契約</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
       <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
@@ -188,7 +188,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          attendance — 日次の出退勤記録
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-attendance" id="tbl-attendance" style="left:920px;top:480px">
+    <div class="tbl tbl-attendance" id="tbl-attendance" style="left:1060px;top:500px">
       <div class="tbl-head">🕐 attendance <small>勤怠記録</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
       <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
@@ -207,7 +207,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          payroll — 月次給与。支給・控除・差引を一元管理
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-payroll" id="tbl-payroll" style="left:880px;top:780px">
+    <div class="tbl tbl-payroll" id="tbl-payroll" style="left:1020px;top:900px">
       <div class="tbl-head">💰 payroll <small>給与明細</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
       <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
@@ -231,7 +231,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          evaluations — 半期/四半期の人事評価
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-evaluation" id="tbl-evaluations" style="left:460px;top:780px">
+    <div class="tbl tbl-evaluation" id="tbl-evaluations" style="left:520px;top:920px">
       <div class="tbl-head">⭐ evaluations <small>人事評価</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
       <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
@@ -255,7 +255,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          expenses — 経費申請・承認ワークフロー
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-expense" id="tbl-expenses" style="left:100px;top:720px">
+    <div class="tbl tbl-expense" id="tbl-expenses" style="left:100px;top:820px">
       <div class="tbl-head">🧾 expenses <small>経費精算</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
       <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
@@ -295,7 +295,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          users — Firebase Auth 連動
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-user" id="tbl-users" style="left:100px;top:440px">
+    <div class="tbl tbl-user" id="tbl-users" style="left:100px;top:480px">
       <div class="tbl-head">👤 users <small>認証ユーザー</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">Firebase UID</span></div>
       <div class="tbl-row"><span class="col-icon"></span><span class="col-name">email / displayName</span><span class="col-type">string</span></div>
@@ -309,7 +309,7 @@ body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e29
     <!-- ═══════════════════════════════════════
          keyRotationLogs — セキュリティ監査記録
          ═══════════════════════════════════════ -->
-    <div class="tbl tbl-keylog" id="tbl-keyRotationLogs" style="left:1220px;top:480px">
+    <div class="tbl tbl-keylog" id="tbl-keyRotationLogs" style="left:1400px;top:500px">
       <div class="tbl-head">🔑 keyRotationLogs <small>キーローテーション</small></div>
       <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
       <div class="tbl-row"><span class="col-icon"></span><span class="col-name">keyType</span><span class="col-type">service_account|encryption_key</span></div>
@@ -337,7 +337,7 @@ const MIN_SCALE = 0.15, MAX_SCALE = 3;
 
 function applyTransform() {
   canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
-  svg.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  // SVGはcanvas内に配置されているため、canvasのtransformで自動連動
   zoomLabel.textContent = Math.round(scale * 100) + "%";
   updateMinimap();
 }
@@ -481,11 +481,18 @@ function bestSides(fromEl, toEl) {
 
 function drawArrows() {
   svg.innerHTML = "";
-  // SVGサイズをキャンバス全体に
-  svg.setAttribute("width", "2000");
-  svg.setAttribute("height", "1400");
-  svg.style.width = "2000px";
-  svg.style.height = "1400px";
+  // SVGサイズをテーブルの実際の範囲に合わせて動的に設定
+  const tables = canvas.querySelectorAll(".tbl");
+  let maxR = 0, maxB = 0;
+  tables.forEach(t => {
+    maxR = Math.max(maxR, t.offsetLeft + t.offsetWidth);
+    maxB = Math.max(maxB, t.offsetTop + t.offsetHeight);
+  });
+  const svgW = maxR + 200, svgH = maxB + 200;
+  svg.setAttribute("width", String(svgW));
+  svg.setAttribute("height", String(svgH));
+  svg.style.width = svgW + "px";
+  svg.style.height = svgH + "px";
 
   // arrowhead marker
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -529,10 +536,10 @@ function drawArrows() {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", `M${a.x},${a.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${b.x},${b.y}`);
     path.setAttribute("stroke", r.color);
-    path.setAttribute("stroke-width", "2");
+    path.setAttribute("stroke-width", "2.5");
     path.setAttribute("fill", "none");
     path.setAttribute("marker-end", `url(#ah-${i})`);
-    path.setAttribute("opacity", "0.7");
+    path.setAttribute("opacity", "0.85");
     svg.appendChild(path);
 
     // ラベル（中央）
