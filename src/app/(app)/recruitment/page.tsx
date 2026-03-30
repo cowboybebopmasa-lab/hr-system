@@ -115,7 +115,7 @@ export default function RecruitmentPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm">{job.description}</p>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
                   <span>¥{job.salaryMin.toLocaleString()} ~ ¥{job.salaryMax.toLocaleString()}</span>
                   <span>開始: {job.startDate}</span>
                   <span>期間: {job.duration}</span>

@@ -166,6 +166,41 @@ export interface DashboardStats {
   pendingPayrolls: number;
 }
 
+// --- Expense (経費) ---
+export interface ExpenseRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  date: string;
+  category: "transportation" | "meals" | "supplies" | "communication" | "training" | "other";
+  description: string;
+  amount: number;
+  receiptUrl?: string;
+  status: "draft" | "submitted" | "approved" | "rejected";
+  approvedBy?: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Enhanced Match Result ---
+export interface EnhancedMatchResult {
+  employeeId: string;
+  employeeName: string;
+  skillScore: number;
+  evaluationScore: number;
+  attendanceScore: number;
+  experienceScore: number;
+  totalScore: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  details: {
+    avgEvaluation: number;
+    contractCount: number;
+    attendanceRate: number;
+  };
+}
+
 // --- Common ---
 export type SortDirection = "asc" | "desc";
 

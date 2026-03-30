@@ -109,7 +109,7 @@ export default function OcrPage() {
   return (
     <>
       <AppHeader title="OCR・データ自動入力" />
-      <main className="flex-1 overflow-auto p-6 space-y-6">
+      <main className="flex-1 overflow-auto p-3 md:p-6 space-y-4 md:space-y-6">
         <Tabs defaultValue="image">
           <TabsList>
             <TabsTrigger value="image">
@@ -132,7 +132,7 @@ export default function OcrPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>書類タイプ</Label>
                     <Select value={imageDocType} onValueChange={(v) => v && setImageDocType(v)}>
@@ -306,7 +306,7 @@ function StructuredDataView({ data }: { data: Record<string, unknown> }) {
         };
 
         return (
-          <div key={key} className="grid grid-cols-4 gap-2 text-sm">
+          <div key={key} className="grid grid-cols-1 sm:grid-cols-4 gap-1 sm:gap-2 text-sm">
             <span className="font-medium text-muted-foreground col-span-1">
               {fieldLabels[key] || key}
             </span>

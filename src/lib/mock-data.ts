@@ -7,6 +7,7 @@ import type {
   JobPosting,
   Evaluation,
   DashboardStats,
+  ExpenseRecord,
 } from "@/types";
 
 export const mockEmployees: Employee[] = [
@@ -257,6 +258,14 @@ export const mockEvaluations: Evaluation[] = [
     goals: "アーキテクト職への昇格準備", comments: "チームの技術的支柱。",
     status: "submitted", createdAt: "2024-06-30T10:00:00Z", updatedAt: "2024-06-30T10:00:00Z",
   },
+];
+
+export const mockExpenses: ExpenseRecord[] = [
+  { id: "exp-001", employeeId: "emp-001", employeeName: "田中 太郎", date: "2024-06-20", category: "transportation", description: "客先訪問 渋谷→品川 往復", amount: 640, status: "approved", approvedBy: "山本 部長", notes: "", createdAt: "2024-06-20T18:00:00Z", updatedAt: "2024-06-21T10:00:00Z" },
+  { id: "exp-002", employeeId: "emp-001", employeeName: "田中 太郎", date: "2024-06-22", category: "meals", description: "クライアント打合せ 昼食代", amount: 1500, status: "approved", approvedBy: "山本 部長", notes: "", createdAt: "2024-06-22T13:00:00Z", updatedAt: "2024-06-23T10:00:00Z" },
+  { id: "exp-003", employeeId: "emp-003", employeeName: "鈴木 一郎", date: "2024-06-24", category: "supplies", description: "USB-Cケーブル 業務用", amount: 2200, status: "submitted", notes: "", createdAt: "2024-06-24T17:00:00Z", updatedAt: "2024-06-24T17:00:00Z" },
+  { id: "exp-004", employeeId: "emp-005", employeeName: "山田 健二", date: "2024-06-25", category: "training", description: "AWS認定試験 受験料", amount: 33000, status: "draft", notes: "領収書添付予定", createdAt: "2024-06-25T09:00:00Z", updatedAt: "2024-06-25T09:00:00Z" },
+  { id: "exp-005", employeeId: "emp-002", employeeName: "佐藤 花子", date: "2024-06-26", category: "communication", description: "モバイルWi-Fi レンタル 1ヶ月", amount: 4500, status: "submitted", notes: "", createdAt: "2024-06-26T10:00:00Z", updatedAt: "2024-06-26T10:00:00Z" },
 ];
 
 export const mockDashboardStats: DashboardStats = {
