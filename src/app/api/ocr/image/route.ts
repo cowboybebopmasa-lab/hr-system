@@ -134,6 +134,23 @@ async function structureWithGemini(text: string, type: string) {
 
 // --- 構造化プロンプト ---
 function getStructurePrompt(text: string, type: string): string {
+  if (type === "receipt") {
+    return `以下は領収書・レシートから抽出したテキストです。JSONで構造化してください。
+
+テキスト:
+${text}
+
+以下のJSON形式で出力してください:
+{
+  "date": "日付(YYYY-MM-DD)",
+  "description": "品名・内容の要約",
+  "amount": 数値(税込金額),
+  "category": "transportation/meals/supplies/communication/training/other のいずれか",
+  "storeName": "店舗名・発行元",
+  "notes": "備考"
+}`;
+  }
+
   if (type === "contract") {
     return `以下は契約書から抽出したテキストです。JSONで構造化してください。
 
@@ -208,6 +225,13 @@ ${text}
 
 // --- LLM未設定時の簡易パース ---
 function simpleStructure(text: string, type: string) {
+  if (type === "receipt") {
+    return {
+      date: "", description: text.slice(0, 100), amount: 0,
+      category: "other", storeName: "", notes: "",
+      _note: "LLM APIキー未設定のため、手動での入力が必要です", _rawText: text,
+    };
+  }
   if (type === "contract") {
     return {
       employeeName: "", clientCompany: "", role: "",
@@ -234,6 +258,20 @@ function simpleStructure(text: string, type: string) {
 
 // --- デモ用モックOCRテキスト ---
 function generateMockOcrText(type: string): string {
+  if (type === "receipt") {
+    return `領収書
+No. 2024-0620-001
+
+日付: 2024年6月20日
+品名: タクシー代
+金額: ¥3,200（税込）
+
+渋谷駅 → 品川クライアントオフィス
+
+株式会社ABCタクシー
+東京都渋谷区道玄坂1-1-1
+TEL: 03-1234-5678`;
+  }
   if (type === "contract") {
     return `業務委託契約書
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { mockExpenses, mockEmployees } from "@/lib/mock-data";
 import type { ExpenseRecord } from "@/types";
-import { Plus, Search, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Search, CheckCircle, XCircle, ImageIcon, ScanText, Loader2 } from "lucide-react";
 
 const categoryLabels: Record<ExpenseRecord["category"], string> = {
   transportation: "交通費", meals: "食事代", supplies: "消耗品",
@@ -40,6 +40,11 @@ export default function ExpensesPage() {
     employeeId: "", date: "", category: "transportation" as ExpenseRecord["category"],
     description: "", amount: "", notes: "",
   });
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+  const ocrInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = expenses.filter(
     (e) => e.employeeName.includes(search) || e.description.includes(search)
@@ -56,6 +61,7 @@ export default function ExpensesPage() {
       category: formData.category,
       description: formData.description,
       amount: Number(formData.amount),
+      receiptUrl: receiptPreview || undefined,
       status: "draft",
       notes: formData.notes,
       createdAt: new Date().toISOString(),
@@ -64,6 +70,8 @@ export default function ExpensesPage() {
     setExpenses([newExpense, ...expenses]);
     setShowForm(false);
     setFormData({ employeeId: "", date: "", category: "transportation", description: "", amount: "", notes: "" });
+    setReceiptPreview(null);
+    setReceiptFile(null);
   };
 
   const handleApprove = (id: string) => {
@@ -71,6 +79,51 @@ export default function ExpensesPage() {
   };
   const handleReject = (id: string) => {
     setExpenses(expenses.map((e) => e.id === id ? { ...e, status: "rejected" as const, updatedAt: new Date().toISOString() } : e));
+  };
+
+  // 写真添付
+  const handleReceiptSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setReceiptFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setReceiptPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  // OCR読取
+  const handleOcr = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setOcrLoading(true);
+
+    // プレビューも設定
+    const reader = new FileReader();
+    reader.onload = (ev) => setReceiptPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+    setReceiptFile(file);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("type", "receipt");
+      const res = await fetch("/api/ocr/image", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok && data.structuredData) {
+        const d = data.structuredData;
+        setFormData((prev) => ({
+          ...prev,
+          date: String(d.date || prev.date),
+          description: String(d.description || d.storeName || prev.description),
+          amount: d.amount ? String(d.amount) : prev.amount,
+          category: d.category && d.category in categoryLabels ? d.category : prev.category,
+          notes: d.notes ? String(d.notes) : prev.notes,
+        }));
+      }
+    } catch { /* ignore */ } finally {
+      setOcrLoading(false);
+      if (ocrInputRef.current) ocrInputRef.current.value = "";
+    }
   };
 
   const totalApproved = expenses.filter((e) => e.status === "approved").reduce((s, e) => s + e.amount, 0);
@@ -100,12 +153,33 @@ export default function ExpensesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="従業員名、内容で検索..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-          <Dialog open={showForm} onOpenChange={setShowForm}>
+          <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) { setReceiptPreview(null); setReceiptFile(null); } }}>
             <DialogTrigger render={<Button />}>
               <Plus className="mr-2 h-4 w-4" />経費申請
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>経費申請</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle>経費申請</DialogTitle>
+                  <div className="flex gap-1">
+                    {/* OCR読取ボタン */}
+                    <input ref={ocrInputRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf" className="hidden" onChange={handleOcr} />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => ocrInputRef.current?.click()}
+                      disabled={ocrLoading}
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md"
+                    >
+                      {ocrLoading ? (
+                        <><Loader2 className="mr-1 h-3 w-3 animate-spin" />読取中</>
+                      ) : (
+                        <><ScanText className="mr-1 h-3 w-3" />領収書OCR</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div>
                   <Label>従業員</Label>
@@ -130,6 +204,30 @@ export default function ExpensesPage() {
                 </div>
                 <div><Label>内容</Label><Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} /></div>
                 <div><Label>金額（円）</Label><Input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} /></div>
+
+                {/* 写真添付 */}
+                <div>
+                  <Label>領収書・レシート写真</Label>
+                  <div className="mt-1">
+                    <input ref={receiptInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleReceiptSelect} />
+                    <Button type="button" variant="outline" size="sm" onClick={() => receiptInputRef.current?.click()}>
+                      <ImageIcon className="mr-1 h-3 w-3" />写真を添付
+                    </Button>
+                    {receiptPreview && (
+                      <div className="mt-2 relative">
+                        <img src={receiptPreview} alt="領収書プレビュー" className="max-h-40 rounded border object-contain" />
+                        <Button
+                          type="button" variant="destructive" size="sm"
+                          className="absolute top-1 right-1 h-6 px-2 text-xs"
+                          onClick={() => { setReceiptPreview(null); setReceiptFile(null); }}
+                        >
+                          削除
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div><Label>備考</Label><Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} /></div>
                 <Button onClick={handleAdd} className="w-full">申請</Button>
               </div>
@@ -147,6 +245,7 @@ export default function ExpensesPage() {
                   <TableHead>カテゴリ</TableHead>
                   <TableHead>内容</TableHead>
                   <TableHead className="text-right">金額</TableHead>
+                  <TableHead>写真</TableHead>
                   <TableHead>ステータス</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -159,6 +258,21 @@ export default function ExpensesPage() {
                     <TableCell><Badge variant="outline" className="text-xs">{categoryLabels[e.category]}</Badge></TableCell>
                     <TableCell className="max-w-[200px] truncate">{e.description}</TableCell>
                     <TableCell className="text-right whitespace-nowrap">¥{e.amount.toLocaleString()}</TableCell>
+                    <TableCell>
+                      {e.receiptUrl ? (
+                        <Dialog>
+                          <DialogTrigger render={<Button variant="ghost" size="icon" />}>
+                            <ImageIcon className="h-4 w-4 text-blue-500" />
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader><DialogTitle>領収書</DialogTitle></DialogHeader>
+                            <img src={e.receiptUrl} alt="領収書" className="w-full rounded" />
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell><Badge variant={statusVariants[e.status]}>{statusLabels[e.status]}</Badge></TableCell>
                     <TableCell className="text-right">
                       {e.status === "submitted" && (

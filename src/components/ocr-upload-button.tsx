@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScanText, Loader2 } from "lucide-react";
 
 interface OcrUploadButtonProps {
-  documentType: "resume" | "job_posting" | "contract";
+  documentType: "resume" | "job_posting" | "contract" | "receipt";
   onResult: (data: Record<string, unknown>) => void;
   label?: string;
 }
@@ -49,15 +49,15 @@ export function OcrUploadButton({ documentType, onResult, label }: OcrUploadButt
       />
       <Button
         type="button"
-        variant="outline"
         size="sm"
         onClick={() => fileInputRef.current?.click()}
         disabled={loading}
+        className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md"
       >
         {loading ? (
-          <><Loader2 className="mr-1 h-3 w-3 animate-spin" />読取中...</>
+          <><Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />読取中...</>
         ) : (
-          <><ScanText className="mr-1 h-3 w-3" />{label || "OCR読取"}</>
+          <><ScanText className="mr-1 h-3.5 w-3.5" />{label || "OCR読取"}</>
         )}
       </Button>
     </>

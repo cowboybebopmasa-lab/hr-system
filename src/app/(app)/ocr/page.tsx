@@ -181,7 +181,7 @@ export default function OcrPage() {
                 <Button
                   onClick={handleImageOcr}
                   disabled={!file || imageLoading}
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md"
                 >
                   {imageLoading ? (
                     <>
@@ -248,7 +248,7 @@ export default function OcrPage() {
                 <Button
                   onClick={handleUrlScrape}
                   disabled={!url || urlLoading}
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md"
                 >
                   {urlLoading ? (
                     <>
