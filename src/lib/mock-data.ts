@@ -248,7 +248,7 @@ export const mockEvaluations: Evaluation[] = [
     strengths: "技術力が高く、チームメンバーへの知識共有も積極的。納期遵守率100%。",
     areasForImprovement: "バックエンド技術の幅をさらに広げると良い。",
     goals: "次期プロジェクトでのテックリード経験", comments: "非常に優秀な人材。",
-    status: "approved", createdAt: "2024-06-30T10:00:00Z", updatedAt: "2024-07-05T10:00:00Z",
+    status: "approved", locked: false, createdAt: "2024-06-30T10:00:00Z", updatedAt: "2024-07-05T10:00:00Z",
   },
   {
     id: "eval-002", employeeId: "emp-003", employeeName: "鈴木 一郎", evaluatorName: "佐々木 マネージャー",
@@ -256,7 +256,7 @@ export const mockEvaluations: Evaluation[] = [
     strengths: "大規模システムの設計・実装における圧倒的な経験値。",
     areasForImprovement: "若手メンバーへの指導をさらに強化。",
     goals: "アーキテクト職への昇格準備", comments: "チームの技術的支柱。",
-    status: "submitted", createdAt: "2024-06-30T10:00:00Z", updatedAt: "2024-06-30T10:00:00Z",
+    status: "submitted", locked: false, createdAt: "2024-06-30T10:00:00Z", updatedAt: "2024-06-30T10:00:00Z",
   },
 ];
 

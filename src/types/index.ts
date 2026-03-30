@@ -152,6 +152,7 @@ export interface Evaluation {
   goals: string;
   comments: string;
   status: "draft" | "submitted" | "approved";
+  locked: boolean;
   createdAt: string;
   updatedAt: string;
 }
