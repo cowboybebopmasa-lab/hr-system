@@ -131,59 +131,33 @@ export default function DashboardPage() {
   return (
     <>
       <AppHeader title="ダッシュボード" />
-      <main className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Stats Grid - Clickable Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {statCards.map((stat) => (
-            <Link key={stat.title} href={stat.href} className="group">
-              <Card className="transition-all duration-200 hover:shadow-md hover:ring-2 hover:ring-primary/20 cursor-pointer h-full">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`rounded-md p-1.5 ${stat.bgColor}`}>
-                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span>詳細を見る</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid gap-6 md:grid-cols-2">
+      <main className="flex-1 overflow-auto p-3 space-y-3 md:p-6 md:space-y-6">
+        {/* Charts Row - Mobile: compact 2-col grid at top */}
+        <div className="grid grid-cols-2 gap-2 md:gap-6 md:grid-cols-2">
           {/* Employee Status Pie Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">従業員ステータス分布</CardTitle>
+          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
+            <CardHeader className="pb-0 md:pb-auto">
+              <CardTitle className="text-xs md:text-base">従業員ステータス</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-32 md:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={employeeStatusData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
+                      innerRadius={20}
+                      outerRadius={40}
                       paddingAngle={4}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}名`}
                     >
                       {employeeStatusData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -191,30 +165,29 @@ export default function DashboardPage() {
           </Card>
 
           {/* Attendance Status Pie Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">勤怠ステータス分布</CardTitle>
+          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
+            <CardHeader className="pb-0 md:pb-auto">
+              <CardTitle className="text-xs md:text-base">勤怠ステータス</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-32 md:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={attendanceStatusData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
+                      innerRadius={20}
+                      outerRadius={40}
                       paddingAngle={4}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}件`}
                     >
                       {attendanceStatusData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -222,17 +195,17 @@ export default function DashboardPage() {
           </Card>
 
           {/* Skills Distribution Bar Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">スキル分布（上位8件）</CardTitle>
+          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
+            <CardHeader className="pb-0 md:pb-auto">
+              <CardTitle className="text-xs md:text-base">スキル分布</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-32 md:h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={skillsDistribution} layout="vertical" margin={{ left: 20 }}>
+                  <BarChart data={skillsDistribution} layout="vertical" margin={{ left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" allowDecimals={false} />
-                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
+                    <YAxis dataKey="name" type="category" width={60} tick={{ fontSize: 9 }} />
                     <Tooltip />
                     <Bar dataKey="count" name="人数" fill="#6366f1" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -242,19 +215,19 @@ export default function DashboardPage() {
           </Card>
 
           {/* Payroll Comparison Bar Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">給与比較</CardTitle>
+          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
+            <CardHeader className="pb-0 md:pb-auto">
+              <CardTitle className="text-xs md:text-base">給与比較</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-32 md:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={payrollComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
+                    <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
                     <Tooltip formatter={(value) => `¥${Number(value).toLocaleString()}`} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
                     <Bar dataKey="総支給" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="控除合計" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="手取り" fill="#22c55e" radius={[4, 4, 0, 0]} />
@@ -265,59 +238,84 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Stats Grid - Compact on mobile (3-col), full on desktop */}
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-3 lg:grid-cols-6 md:gap-4">
+          {statCards.map((stat) => (
+            <Link key={stat.title} href={stat.href} className="group">
+              <Card size="sm" className="transition-all duration-200 hover:shadow-md hover:ring-2 hover:ring-primary/20 cursor-pointer h-full md:[&]:py-4 md:[&]:gap-4">
+                <CardHeader className="flex flex-row items-center justify-between pb-0 md:pb-2">
+                  <CardTitle className="text-[10px] leading-tight md:text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <div className={`rounded-md p-1 md:p-1.5 ${stat.bgColor}`}>
+                    <stat.icon className={`h-3 w-3 md:h-4 md:w-4 ${stat.color}`} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-base md:text-2xl font-bold">{stat.value}</div>
+                  <div className="hidden md:flex items-center gap-1 mt-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>詳細を見る</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        <div className="grid gap-2 md:gap-6 md:grid-cols-2">
           {/* Expiring Contracts */}
-          <Card>
+          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">契約期限アラート</CardTitle>
-              <Link href="/contracts" className="text-sm text-primary hover:underline flex items-center gap-1">
+              <CardTitle className="text-xs md:text-base">契約期限アラート</CardTitle>
+              <Link href="/contracts" className="text-xs md:text-sm text-primary hover:underline flex items-center gap-1">
                 一覧へ <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-1.5 md:space-y-3">
                 {mockContracts
                   .filter((c) => c.status === "expiring_soon")
                   .map((contract) => (
-                    <div key={contract.id} className="flex items-center justify-between rounded-lg border p-3">
+                    <div key={contract.id} className="flex items-center justify-between rounded-lg border p-2 md:p-3">
                       <div>
-                        <p className="font-medium">{contract.employeeName}</p>
-                        <p className="text-sm text-muted-foreground">{contract.clientCompany}</p>
+                        <p className="font-medium text-xs md:text-sm">{contract.employeeName}</p>
+                        <p className="text-[10px] md:text-sm text-muted-foreground">{contract.clientCompany}</p>
                       </div>
                       <div className="text-right">
-                        <Badge variant="destructive">期限間近</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">{contract.endDate}</p>
+                        <Badge variant="destructive" className="text-[10px] md:text-xs">期限間近</Badge>
+                        <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5">{contract.endDate}</p>
                       </div>
                     </div>
                   ))}
                 {mockContracts.filter((c) => c.status === "expiring_soon").length === 0 && (
-                  <p className="text-sm text-muted-foreground">期限間近の契約はありません</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">期限間近の契約はありません</p>
                 )}
               </div>
             </CardContent>
           </Card>
 
           {/* Open Positions */}
-          <Card>
+          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">募集中案件</CardTitle>
-              <Link href="/recruitment" className="text-sm text-primary hover:underline flex items-center gap-1">
+              <CardTitle className="text-xs md:text-base">募集中案件</CardTitle>
+              <Link href="/recruitment" className="text-xs md:text-sm text-primary hover:underline flex items-center gap-1">
                 一覧へ <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-1.5 md:space-y-3">
                 {mockJobPostings
                   .filter((j) => j.status === "open")
                   .map((job) => (
-                    <div key={job.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div>
-                        <p className="font-medium text-sm">{job.title}</p>
-                        <p className="text-sm text-muted-foreground">{job.clientCompany}</p>
+                    <div key={job.id} className="flex items-center justify-between rounded-lg border p-2 md:p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-xs md:text-sm truncate">{job.title}</p>
+                        <p className="text-[10px] md:text-sm text-muted-foreground">{job.clientCompany}</p>
                       </div>
-                      <div className="text-right">
-                        <Badge variant="secondary">{job.matchedCandidates.length}名候補</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">開始: {job.startDate}</p>
+                      <div className="text-right ml-2">
+                        <Badge variant="secondary" className="text-[10px] md:text-xs">{job.matchedCandidates.length}名候補</Badge>
+                        <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5">開始: {job.startDate}</p>
                       </div>
                     </div>
                   ))}
@@ -326,26 +324,27 @@ export default function DashboardPage() {
           </Card>
 
           {/* Recent Attendance */}
-          <Card className="md:col-span-2">
+          <Card size="sm" className="md:col-span-2 md:[&]:py-4 md:[&]:gap-4">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">最近の勤怠記録</CardTitle>
-              <Link href="/attendance" className="text-sm text-primary hover:underline flex items-center gap-1">
+              <CardTitle className="text-xs md:text-base">最近の勤怠記録</CardTitle>
+              <Link href="/attendance" className="text-xs md:text-sm text-primary hover:underline flex items-center gap-1">
                 一覧へ <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-1 md:space-y-2">
                 {mockAttendance.slice(0, 5).map((record) => (
-                  <div key={record.id} className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-3">
-                      <p className="font-medium text-sm w-28">{record.employeeName}</p>
-                      <p className="text-sm text-muted-foreground">{record.date}</p>
+                  <div key={record.id} className="flex items-center justify-between rounded-lg border p-1.5 md:p-3">
+                    <div className="flex items-center gap-1.5 md:gap-3">
+                      <p className="font-medium text-[10px] md:text-sm w-16 md:w-28 truncate">{record.employeeName}</p>
+                      <p className="text-[10px] md:text-sm text-muted-foreground">{record.date}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm">
+                    <div className="flex items-center gap-1.5 md:gap-3">
+                      <span className="text-[10px] md:text-sm hidden sm:inline">
                         {record.clockIn || "--:--"} ~ {record.clockOut || "--:--"}
                       </span>
                       <Badge
+                        className="text-[10px] md:text-xs"
                         variant={
                           record.status === "present" ? "default" :
                           record.status === "late" ? "destructive" :

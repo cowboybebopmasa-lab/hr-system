@@ -94,9 +94,9 @@ export default function EmployeesPage() {
   return (
     <>
       <AppHeader title="従業員管理" />
-      <main className="flex-1 overflow-auto p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="relative w-80">
+      <main className="flex-1 overflow-auto p-3 md:p-6 space-y-3 md:space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="名前、スキル、メールで検索..."
@@ -137,7 +137,7 @@ export default function EmployeesPage() {
         </div>
 
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

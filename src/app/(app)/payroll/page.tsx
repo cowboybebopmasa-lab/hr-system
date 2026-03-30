@@ -43,24 +43,24 @@ export default function PayrollPage() {
   return (
     <>
       <AppHeader title="給与管理" />
-      <main className="flex-1 overflow-auto p-6 space-y-4">
-        <div className="grid gap-4 md:grid-cols-3">
+      <main className="flex-1 overflow-auto p-3 md:p-6 space-y-3 md:space-y-4">
+        <div className="grid grid-cols-3 gap-2 md:gap-4">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">総支給額</CardTitle></CardHeader>
-            <CardContent><p className="text-2xl font-bold">{fmt(payrolls.reduce((s, p) => s + p.grossPay, 0))}</p></CardContent>
+            <CardHeader className="pb-0 md:pb-2"><CardTitle className="text-[10px] md:text-sm text-muted-foreground">総支給額</CardTitle></CardHeader>
+            <CardContent><p className="text-sm md:text-2xl font-bold">{fmt(payrolls.reduce((s, p) => s + p.grossPay, 0))}</p></CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">総控除額</CardTitle></CardHeader>
-            <CardContent><p className="text-2xl font-bold">{fmt(payrolls.reduce((s, p) => s + p.totalDeductions, 0))}</p></CardContent>
+            <CardHeader className="pb-0 md:pb-2"><CardTitle className="text-[10px] md:text-sm text-muted-foreground">総控除額</CardTitle></CardHeader>
+            <CardContent><p className="text-sm md:text-2xl font-bold">{fmt(payrolls.reduce((s, p) => s + p.totalDeductions, 0))}</p></CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">総手取額</CardTitle></CardHeader>
-            <CardContent><p className="text-2xl font-bold">{fmt(payrolls.reduce((s, p) => s + p.netPay, 0))}</p></CardContent>
+            <CardHeader className="pb-0 md:pb-2"><CardTitle className="text-[10px] md:text-sm text-muted-foreground">総手取額</CardTitle></CardHeader>
+            <CardContent><p className="text-sm md:text-2xl font-bold">{fmt(payrolls.reduce((s, p) => s + p.netPay, 0))}</p></CardContent>
           </Card>
         </div>
 
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
