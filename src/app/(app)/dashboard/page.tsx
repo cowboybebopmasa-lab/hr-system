@@ -127,72 +127,57 @@ const skillsDistribution = (() => {
     .map(([name, count]) => ({ name, count }));
 })();
 
+function PieChartCard({ title, data }: { title: string; data: { name: string; value: number; color: string }[] }) {
+  return (
+    <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
+      <CardHeader className="pb-0 md:pb-auto">
+        <CardTitle className="text-xs md:text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* スマホ: コンパクト */}
+        <div className="h-32 md:hidden">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data} cx="50%" cy="50%" innerRadius={20} outerRadius={40} paddingAngle={4} dataKey="value">
+                {data.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
+              </Pie>
+              <Tooltip />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        {/* PC: 大きく表示 + ラベル付き */}
+        <div className="hidden md:block h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data} cx="50%" cy="45%"
+                innerRadius={60} outerRadius={100}
+                paddingAngle={4} dataKey="value"
+                label={({ name, value }) => `${name}: ${value}名`}
+                labelLine={{ strokeWidth: 1 }}
+              >
+                {data.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
+              </Pie>
+              <Tooltip />
+              <Legend wrapperStyle={{ fontSize: 13 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   return (
     <>
       <AppHeader title="ダッシュボード" />
       <main className="flex-1 overflow-auto p-3 space-y-3 md:p-6 md:space-y-6">
-        {/* Charts Row - Mobile: compact 2-col grid at top */}
-        <div className="grid grid-cols-2 gap-2 md:gap-6 md:grid-cols-2">
-          {/* Employee Status Pie Chart */}
-          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
-            <CardHeader className="pb-0 md:pb-auto">
-              <CardTitle className="text-xs md:text-base">従業員ステータス</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-32 md:h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={employeeStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={20}
-                      outerRadius={40}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {employeeStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Attendance Status Pie Chart */}
-          <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
-            <CardHeader className="pb-0 md:pb-auto">
-              <CardTitle className="text-xs md:text-base">勤怠ステータス</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-32 md:h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={attendanceStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={20}
-                      outerRadius={40}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {attendanceStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Charts Row - Mobile: compact 2-col, PC: 2-col with larger charts */}
+        <div className="grid grid-cols-2 gap-2 md:gap-6">
+          <PieChartCard title="従業員ステータス" data={employeeStatusData} />
+          <PieChartCard title="勤怠ステータス" data={attendanceStatusData} />
 
           {/* Skills Distribution Bar Chart */}
           <Card size="sm" className="md:[&]:py-4 md:[&]:gap-4">
@@ -200,12 +185,12 @@ export default function DashboardPage() {
               <CardTitle className="text-xs md:text-base">スキル分布</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-32 md:h-64">
+              <div className="h-32 md:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={skillsDistribution} layout="vertical" margin={{ left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
-                    <YAxis dataKey="name" type="category" width={60} tick={{ fontSize: 9 }} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} className="md:[&_text]:!text-[13px]" />
+                    <YAxis dataKey="name" type="category" width={70} tick={{ fontSize: 9 }} className="md:[&_text]:!text-[12px]" />
                     <Tooltip />
                     <Bar dataKey="count" name="人数" fill="#6366f1" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -220,14 +205,14 @@ export default function DashboardPage() {
               <CardTitle className="text-xs md:text-base">給与比較</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-32 md:h-64">
+              <div className="h-32 md:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={payrollComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-                    <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
+                    <XAxis dataKey="name" tick={{ fontSize: 9 }} className="md:[&_text]:!text-[12px]" />
+                    <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `¥${(v / 10000).toFixed(0)}万`} className="md:[&_text]:!text-[12px]" />
                     <Tooltip formatter={(value) => `¥${Number(value).toLocaleString()}`} />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} className="md:[&_span]:!text-[13px]" />
                     <Bar dataKey="総支給" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="控除合計" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="手取り" fill="#22c55e" radius={[4, 4, 0, 0]} />

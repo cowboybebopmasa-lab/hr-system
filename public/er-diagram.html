@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>HR System ER図</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#1e293b;color:#1e293b;overflow:hidden;height:100vh;width:100vw}
+
+/* === ビューポート（パン/ズーム領域） === */
+#viewport{width:100%;height:100%;cursor:grab;position:relative;overflow:hidden}
+#viewport.grabbing{cursor:grabbing}
+#canvas{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+
+/* === SVG矢印レイヤー === */
+#arrows{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+.arrow-line{stroke:#94a3b8;stroke-width:2;fill:none}
+.arrow-head{fill:#94a3b8}
+.arrow-label{font-size:11px;font-family:"Segoe UI",system-ui,sans-serif;fill:#64748b;font-weight:700}
+.arrow-fk{font-size:9px;font-family:"Segoe UI",system-ui,sans-serif;fill:#94a3b8}
+
+/* === テーブルカード === */
+.tbl{position:absolute;border-radius:8px;overflow:hidden;border:2px solid;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12);min-width:220px;max-width:280px}
+.tbl-head{padding:5px 10px;font-size:12px;font-weight:800;color:#fff;white-space:nowrap}
+.tbl-head small{font-weight:400;opacity:.85;font-size:10px;margin-left:4px}
+.tbl-row{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:3px;padding:2px 8px;border-bottom:1px solid #f1f5f9;font-size:11px}
+.tbl-row:last-child{border-bottom:none}
+.tbl-row.pk{background:#fffbeb}
+.tbl-row.fk{background:#eff6ff}
+.col-icon{font-size:11px;text-align:center}
+.col-name{font-weight:600;color:#1e293b}
+.col-type{color:#94a3b8;font-size:9.5px;text-align:right;white-space:nowrap}
+.col-note{grid-column:2/4;color:#94a3b8;font-size:9px;font-style:italic;line-height:1.2;padding-bottom:1px}
+.tbl-section{padding:2px 8px;font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;background:#f8fafc;border-bottom:1px solid #f1f5f9}
+
+/* --- カラー --- */
+.tbl-employee   {border-color:#3b5bdb} .tbl-employee .tbl-head{background:#3b5bdb}
+.tbl-contract   {border-color:#ea580c} .tbl-contract .tbl-head{background:#ea580c}
+.tbl-attendance {border-color:#0891b2} .tbl-attendance .tbl-head{background:#0891b2}
+.tbl-payroll    {border-color:#059669} .tbl-payroll .tbl-head{background:#059669}
+.tbl-job        {border-color:#7c3aed} .tbl-job .tbl-head{background:#7c3aed}
+.tbl-evaluation {border-color:#d946ef} .tbl-evaluation .tbl-head{background:#d946ef}
+.tbl-expense    {border-color:#d97706} .tbl-expense .tbl-head{background:#d97706}
+.tbl-user       {border-color:#64748b} .tbl-user .tbl-head{background:#64748b}
+.tbl-keylog     {border-color:#ef4444} .tbl-keylog .tbl-head{background:#ef4444}
+
+/* === ヘッダーUI（固定） === */
+#header{position:fixed;top:0;left:0;right:0;z-index:100;background:linear-gradient(180deg,rgba(30,41,59,.95),rgba(30,41,59,.7) 80%,transparent);padding:10px 16px 20px;pointer-events:none}
+#header *{pointer-events:auto}
+#header h1{color:#fff;font-size:16px;font-weight:900;display:inline}
+#header .brand{color:#60a5fa}
+#header .sub{color:#94a3b8;font-size:11px;margin-left:8px}
+#header .back{color:#60a5fa;font-size:11px;text-decoration:none;margin-left:12px}
+#header .back:hover{text-decoration:underline}
+
+/* === ズームコントロール（右下固定） === */
+#controls{position:fixed;bottom:16px;right:16px;z-index:100;display:flex;flex-direction:column;gap:4px;align-items:center}
+#controls button{width:36px;height:36px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#controls button:hover{background:#334155}
+#zoom-level{color:#94a3b8;font-size:10px;margin:2px 0}
+
+/* === ミニマップ（左下固定） === */
+#minimap{position:fixed;bottom:16px;left:16px;z-index:100;width:180px;height:120px;background:rgba(30,41,59,.9);border:1px solid #475569;border-radius:8px;overflow:hidden;cursor:pointer}
+#minimap canvas{width:100%;height:100%}
+#minimap-viewport{position:absolute;border:1.5px solid #60a5fa;border-radius:2px;pointer-events:none}
+
+/* === 設計方針（左下、ミニマップ上） === */
+#notes{position:fixed;bottom:148px;left:16px;z-index:100;width:280px;background:rgba(30,41,59,.92);border:1px solid #475569;border-radius:8px;padding:10px 12px;color:#cbd5e1;font-size:10px;line-height:1.55}
+#notes h3{font-size:11px;color:#60a5fa;margin-bottom:5px}
+#notes strong{color:#e2e8f0}
+#notes .note-item{margin-bottom:5px}
+#notes .note-item:last-child{margin-bottom:0}
+
+/* === 凡例（右下、コントロール上） === */
+#legend{position:fixed;bottom:130px;right:16px;z-index:100;background:rgba(30,41,59,.92);border:1px solid #475569;border-radius:8px;padding:8px 12px}
+#legend h3{font-size:10px;color:#94a3b8;margin-bottom:4px}
+.leg-row{display:flex;align-items:center;gap:5px;font-size:10px;color:#cbd5e1;margin-bottom:2px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-icons{display:flex;gap:8px;margin-top:4px;padding-top:4px;border-top:1px solid #475569;font-size:9px;color:#94a3b8}
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div id="header">
+  <h1><span class="brand">HR System</span> ER図</h1>
+  <span class="sub">Firestore コレクション — エンティティ &amp; リレーション（2026年版）</span>
+  <a class="back" href="/system-overview.html">&larr; システム概要図</a>
+</div>
+
+<!-- ズームコントロール -->
+<div id="controls">
+  <button id="btn-zoomin" title="ズームイン">+</button>
+  <span id="zoom-level">100%</span>
+  <button id="btn-zoomout" title="ズームアウト">&minus;</button>
+  <button id="btn-fit" title="全体表示" style="font-size:12px;margin-top:4px">⊞</button>
+  <button id="btn-reset" title="リセット" style="font-size:12px">↺</button>
+</div>
+
+<!-- 凡例 -->
+<div id="legend">
+  <h3>LEGEND</h3>
+  <div class="leg-row"><div class="leg-dot" style="background:#3b5bdb"></div>employees（中心）</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#ea580c"></div>contracts</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#0891b2"></div>attendance</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#059669"></div>payroll</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#7c3aed"></div>jobPostings</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#d946ef"></div>evaluations</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#d97706"></div>expenses</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#64748b"></div>users</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#ef4444"></div>keyRotationLogs</div>
+  <div class="leg-icons">
+    <span>🔑 PK</span><span>🔗 FK</span><span>🕐 Timestamp</span><span>? Optional</span>
+  </div>
+</div>
+
+<!-- 設計方針メモ -->
+<div id="notes">
+  <h3>📐 設計方針</h3>
+  <div class="note-item"><strong>非正規化:</strong> Firestore は JOIN 不可のため employeeName を各テーブルに複製保持。名前変更時はバッチ更新。</div>
+  <div class="note-item"><strong>ベクトル検索:</strong> employees / jobPostings の skillVector に LLM 生成ベクトルを格納。Firestore KNN でマッチング（専用DB不要）。</div>
+  <div class="note-item"><strong>タイムスタンプ:</strong> ISO 8601 文字列で統一。firestore.ts の CRUD ヘルパーで自動付与。</div>
+</div>
+
+<!-- ミニマップ -->
+<div id="minimap">
+  <canvas id="minimap-canvas"></canvas>
+  <div id="minimap-viewport"></div>
+</div>
+
+<!-- メインビューポート -->
+<div id="viewport">
+  <svg id="arrows"></svg>
+  <div id="canvas">
+
+    <!-- ═══════════════════════════════════════
+         employees — 全テーブルの中心ハブ
+         contracts / attendance / payroll / evaluations / expenses が 1:N で参照
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-employee" id="tbl-employees" style="left:500px;top:280px">
+      <div class="tbl-head">👥 employees <small>従業員・派遣スタッフ</small></div>
+      <div class="tbl-section">基本情報</div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">name / nameKana</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">email / phone</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">address</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">dateOfBirth</span><span class="col-type">YYYY-MM-DD</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">gender</span><span class="col-type">male|female|other</span></div>
+      <div class="tbl-section">スキル・経歴（AIマッチング入力）</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">skills</span><span class="col-type">string[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">skillVector</span><span class="col-type">number[]?</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">LLM生成。Firestore KNN検索で使用</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">certifications</span><span class="col-type">string[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">experience</span><span class="col-type">ExperienceEntry[]</span></div>
+      <div class="tbl-section">雇用・派遣ステータス</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">employmentType</span><span class="col-type">dispatch|contract|…</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">active|available|…</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">desiredSalary</span><span class="col-type">number?</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">availableFrom</span><span class="col-type">string?</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">preferredLocations</span><span class="col-type">string[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">notes/photoUrl/resumeUrl</span><span class="col-type">string?</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / updatedAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         contracts — endDate で Cron アラート発火
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-contract" id="tbl-contracts" style="left:880px;top:60px">
+      <div class="tbl-head">📋 contracts <small>派遣契約</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">employeeName</span><span class="col-type">非正規化</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">clientCompany</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">派遣先企業名</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">startDate / endDate</span><span class="col-type">YYYY-MM-DD</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">role</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">hourlySalary</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">スタッフへの支払時給(円)</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">billingRate</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">派遣先請求単価(円)。差額=粗利</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">active|expiring_soon|…</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">alertSentDays</span><span class="col-type">number[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">送信済み日数(60,30,14,7,3,1)。重複防止</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">notes</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / updatedAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         attendance — 日次の出退勤記録
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-attendance" id="tbl-attendance" style="left:920px;top:480px">
+      <div class="tbl-head">🕐 attendance <small>勤怠記録</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">employeeName</span><span class="col-type">非正規化</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">date</span><span class="col-type">YYYY-MM-DD</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">clockIn / clockOut</span><span class="col-type">HH:mm?</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">breakMinutes</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">workMinutes</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">out - in - break。給与計算の基礎値</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">overtimeMinutes</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">present|absent|late|…</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">notes</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         payroll — 月次給与。支給・控除・差引を一元管理
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-payroll" id="tbl-payroll" style="left:880px;top:780px">
+      <div class="tbl-head">💰 payroll <small>給与明細</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">employeeName</span><span class="col-type">非正規化</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">month</span><span class="col-type">YYYY-MM</span></div>
+      <div class="tbl-section">支給 grossPay = base+OT+手当</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">baseSalary / overtimePay</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">transportation / other</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">grossPay</span><span class="col-type">number</span></div>
+      <div class="tbl-section">控除 = 社保 + 税 + other</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">health/pension/employment</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">incomeTax / residentTax</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">otherDeductions / total</span><span class="col-type">number</span></div>
+      <div class="tbl-section">netPay = gross - deductions</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">netPay</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">draft|confirmed|paid</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">paidAt</span><span class="col-type">ISO string?</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / updatedAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         evaluations — 半期/四半期の人事評価
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-evaluation" id="tbl-evaluations" style="left:460px;top:780px">
+      <div class="tbl-head">⭐ evaluations <small>人事評価</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">employeeName</span><span class="col-type">非正規化</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">evaluatorName</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">period</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">例: "2026年上期"</span></div>
+      <div class="tbl-section">スコア（各 1〜5 の5段階）</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">performance / skill</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">attitude / overall</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">overallScore はマッチング評価に参照</span></div>
+      <div class="tbl-section">定性コメント</div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">strengths / areas</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">goals / comments</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">draft|submitted|approved</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">locked</span><span class="col-type">boolean</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">approved後 true。編集禁止</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / updatedAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         expenses — 経費申請・承認ワークフロー
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-expense" id="tbl-expenses" style="left:100px;top:720px">
+      <div class="tbl-head">🧾 expenses <small>経費精算</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row fk"><span class="col-icon">🔗</span><span class="col-name">employeeId</span><span class="col-type">&rarr; employees.id</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">employeeName</span><span class="col-type">非正規化</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">date</span><span class="col-type">YYYY-MM-DD</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">category</span><span class="col-type">transportation|meals|…</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">description</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">amount</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">receiptUrl</span><span class="col-type">string?</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">OCR読取でアップロードした領収書URL</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">draft|submitted|approved|rejected</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">approvedBy / notes</span><span class="col-type">string?</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / updatedAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         jobPostings — matchedCandidates に結果を埋め込み
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-job" id="tbl-jobPostings" style="left:100px;top:60px">
+      <div class="tbl-head">🏢 jobPostings <small>求人・案件</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">clientCompany / title</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">description</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">requiredSkills</span><span class="col-type">string[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">skillVector</span><span class="col-type">number[]?</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">employees.skillVector とのKNN距離でマッチ</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">preferredSkills</span><span class="col-type">string[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">location</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">salaryMin / salaryMax</span><span class="col-type">number</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">startDate / duration</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">status</span><span class="col-type">open|filled|closed|on_hold</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">matchedCandidates</span><span class="col-type">MatchResult[]</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">埋め込み: employeeId, score, skills</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / updatedAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         users — Firebase Auth 連動
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-user" id="tbl-users" style="left:100px;top:440px">
+      <div class="tbl-head">👤 users <small>認証ユーザー</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">Firebase UID</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">email / displayName</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">role</span><span class="col-type">admin|coordinator|viewer</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">admin:全権 / coordinator:人事操作 / viewer:閲覧のみ</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">consentGiven</span><span class="col-type">boolean</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">false → consent画面にリダイレクト</span></div>
+      <div class="tbl-row"><span class="col-icon">🕐</span><span class="col-name">createdAt / lastLoginAt</span><span class="col-type">ISO string</span></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         keyRotationLogs — セキュリティ監査記録
+         ═══════════════════════════════════════ -->
+    <div class="tbl tbl-keylog" id="tbl-keyRotationLogs" style="left:1220px;top:480px">
+      <div class="tbl-head">🔑 keyRotationLogs <small>キーローテーション</small></div>
+      <div class="tbl-row pk"><span class="col-icon">🔑</span><span class="col-name">id</span><span class="col-type">string (auto)</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">keyType</span><span class="col-type">service_account|encryption_key</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name"></span><span class="col-note">GCPサービスアカウント or バックアップ暗号化キー</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">rotatedBy</span><span class="col-type">string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">rotatedAt</span><span class="col-type">ISO string</span></div>
+      <div class="tbl-row"><span class="col-icon"></span><span class="col-name">notes</span><span class="col-type">string</span></div>
+    </div>
+
+  </div><!-- /canvas -->
+</div><!-- /viewport -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// パン & ズーム エンジン
+// ═══════════════════════════════════════════════════
+const viewport = document.getElementById("viewport");
+const canvas = document.getElementById("canvas");
+const svg = document.getElementById("arrows");
+const zoomLabel = document.getElementById("zoom-level");
+
+let scale = 1, panX = 0, panY = 0;
+let isDragging = false, dragStartX = 0, dragStartY = 0;
+const MIN_SCALE = 0.15, MAX_SCALE = 3;
+
+function applyTransform() {
+  canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  svg.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  zoomLabel.textContent = Math.round(scale * 100) + "%";
+  updateMinimap();
+}
+
+// --- マウスドラッグでパン ---
+viewport.addEventListener("pointerdown", e => {
+  if (e.target.closest(".tbl")) return; // テーブル上ではパンしない
+  isDragging = true;
+  dragStartX = e.clientX - panX;
+  dragStartY = e.clientY - panY;
+  viewport.classList.add("grabbing");
+  viewport.setPointerCapture(e.pointerId);
+});
+viewport.addEventListener("pointermove", e => {
+  if (!isDragging) return;
+  panX = e.clientX - dragStartX;
+  panY = e.clientY - dragStartY;
+  applyTransform();
+});
+viewport.addEventListener("pointerup", () => {
+  isDragging = false;
+  viewport.classList.remove("grabbing");
+});
+
+// --- ホイールでズーム（ポインタ中心） ---
+viewport.addEventListener("wheel", e => {
+  e.preventDefault();
+  const rect = viewport.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const oldScale = scale;
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * delta));
+  // ポインタ位置を中心にズーム
+  panX = mx - (mx - panX) * (scale / oldScale);
+  panY = my - (my - panY) * (scale / oldScale);
+  applyTransform();
+}, { passive: false });
+
+// --- タッチ: ピンチズーム ---
+let lastTouchDist = 0, lastTouchMid = { x: 0, y: 0 };
+viewport.addEventListener("touchstart", e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastTouchDist = Math.hypot(dx, dy);
+    lastTouchMid = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+  }
+}, { passive: true });
+viewport.addEventListener("touchmove", e => {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.hypot(dx, dy);
+    const mid = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+    const oldScale = scale;
+    scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (dist / lastTouchDist)));
+    const rect = viewport.getBoundingClientRect();
+    const mx = mid.x - rect.left;
+    const my = mid.y - rect.top;
+    panX = mx - (mx - panX) * (scale / oldScale);
+    panY = my - (my - panY) * (scale / oldScale);
+    panX += mid.x - lastTouchMid.x;
+    panY += mid.y - lastTouchMid.y;
+    lastTouchDist = dist;
+    lastTouchMid = mid;
+    applyTransform();
+  }
+}, { passive: false });
+
+// --- ボタン ---
+document.getElementById("btn-zoomin").onclick = () => { zoomTo(scale * 1.25); };
+document.getElementById("btn-zoomout").onclick = () => { zoomTo(scale * 0.8); };
+document.getElementById("btn-reset").onclick = () => { scale = 1; panX = 0; panY = 0; applyTransform(); };
+document.getElementById("btn-fit").onclick = fitAll;
+
+function zoomTo(newScale) {
+  const rect = viewport.getBoundingClientRect();
+  const cx = rect.width / 2, cy = rect.height / 2;
+  const oldScale = scale;
+  scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+  panX = cx - (cx - panX) * (scale / oldScale);
+  panY = cy - (cy - panY) * (scale / oldScale);
+  applyTransform();
+}
+
+function fitAll() {
+  const tables = canvas.querySelectorAll(".tbl");
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  tables.forEach(t => {
+    const x = t.offsetLeft, y = t.offsetTop;
+    minX = Math.min(minX, x); minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + t.offsetWidth); maxY = Math.max(maxY, y + t.offsetHeight);
+  });
+  const pad = 60;
+  const cw = maxX - minX + pad * 2, ch = maxY - minY + pad * 2;
+  const vw = viewport.clientWidth, vh = viewport.clientHeight;
+  scale = Math.min(vw / cw, vh / ch, 1.5);
+  panX = (vw - cw * scale) / 2 - minX * scale + pad * scale;
+  panY = (vh - ch * scale) / 2 - minY * scale + pad * scale;
+  applyTransform();
+}
+
+// ═══════════════════════════════════════════════════
+// SVG 矢印描画 — テーブル間のリレーションを可視化
+// ═══════════════════════════════════════════════════
+const RELATIONS = [
+  { from: "tbl-employees", to: "tbl-contracts",    label: "1 : N", fk: "employeeId", color: "#ea580c" },
+  { from: "tbl-employees", to: "tbl-attendance",   label: "1 : N", fk: "employeeId", color: "#0891b2" },
+  { from: "tbl-employees", to: "tbl-payroll",      label: "1 : N", fk: "employeeId", color: "#059669" },
+  { from: "tbl-employees", to: "tbl-evaluations",  label: "1 : N", fk: "employeeId", color: "#d946ef" },
+  { from: "tbl-employees", to: "tbl-expenses",     label: "1 : N", fk: "employeeId", color: "#d97706" },
+  { from: "tbl-jobPostings", to: "tbl-employees",  label: "N : N", fk: "matchedCandidates (embedded)", color: "#7c3aed" },
+];
+
+function getAnchor(el, side) {
+  const x = el.offsetLeft, y = el.offsetTop, w = el.offsetWidth, h = el.offsetHeight;
+  switch (side) {
+    case "top":    return { x: x + w / 2, y };
+    case "bottom": return { x: x + w / 2, y: y + h };
+    case "left":   return { x, y: y + h / 2 };
+    case "right":  return { x: x + w, y: y + h / 2 };
+  }
+}
+
+function bestSides(fromEl, toEl) {
+  const fc = { x: fromEl.offsetLeft + fromEl.offsetWidth / 2, y: fromEl.offsetTop + fromEl.offsetHeight / 2 };
+  const tc = { x: toEl.offsetLeft + toEl.offsetWidth / 2, y: toEl.offsetTop + toEl.offsetHeight / 2 };
+  const dx = tc.x - fc.x, dy = tc.y - fc.y;
+  let fromSide, toSide;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    fromSide = dx > 0 ? "right" : "left";
+    toSide = dx > 0 ? "left" : "right";
+  } else {
+    fromSide = dy > 0 ? "bottom" : "top";
+    toSide = dy > 0 ? "top" : "bottom";
+  }
+  return { fromSide, toSide };
+}
+
+function drawArrows() {
+  svg.innerHTML = "";
+  // SVGサイズをキャンバス全体に
+  svg.setAttribute("width", "2000");
+  svg.setAttribute("height", "1400");
+  svg.style.width = "2000px";
+  svg.style.height = "1400px";
+
+  // arrowhead marker
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  RELATIONS.forEach((r, i) => {
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    marker.setAttribute("id", "ah-" + i);
+    marker.setAttribute("viewBox", "0 0 10 7");
+    marker.setAttribute("refX", "10"); marker.setAttribute("refY", "3.5");
+    marker.setAttribute("markerWidth", "8"); marker.setAttribute("markerHeight", "6");
+    marker.setAttribute("orient", "auto-start-reverse");
+    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    poly.setAttribute("points", "0 0, 10 3.5, 0 7");
+    poly.setAttribute("fill", r.color);
+    marker.appendChild(poly);
+    defs.appendChild(marker);
+  });
+  svg.appendChild(defs);
+
+  RELATIONS.forEach((r, i) => {
+    const fromEl = document.getElementById(r.from);
+    const toEl = document.getElementById(r.to);
+    if (!fromEl || !toEl) return;
+
+    const { fromSide, toSide } = bestSides(fromEl, toEl);
+    const a = getAnchor(fromEl, fromSide);
+    const b = getAnchor(toEl, toSide);
+
+    // ベジェ曲線の制御点
+    const dist = Math.hypot(b.x - a.x, b.y - a.y) * 0.4;
+    const cp1 = { ...a }, cp2 = { ...b };
+    if (fromSide === "right") cp1.x += dist;
+    else if (fromSide === "left") cp1.x -= dist;
+    else if (fromSide === "bottom") cp1.y += dist;
+    else cp1.y -= dist;
+    if (toSide === "right") cp2.x += dist;
+    else if (toSide === "left") cp2.x -= dist;
+    else if (toSide === "bottom") cp2.y += dist;
+    else cp2.y -= dist;
+
+    // パス
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M${a.x},${a.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${b.x},${b.y}`);
+    path.setAttribute("stroke", r.color);
+    path.setAttribute("stroke-width", "2");
+    path.setAttribute("fill", "none");
+    path.setAttribute("marker-end", `url(#ah-${i})`);
+    path.setAttribute("opacity", "0.7");
+    svg.appendChild(path);
+
+    // ラベル（中央）
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    // 背景
+    const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bg.setAttribute("x", mx - 22); bg.setAttribute("y", my - 18);
+    bg.setAttribute("width", "44"); bg.setAttribute("height", "28");
+    bg.setAttribute("rx", "4"); bg.setAttribute("fill", "#1e293b"); bg.setAttribute("opacity", "0.85");
+    svg.appendChild(bg);
+
+    const text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text1.setAttribute("x", mx); text1.setAttribute("y", my - 4);
+    text1.setAttribute("text-anchor", "middle");
+    text1.setAttribute("class", "arrow-label");
+    text1.setAttribute("fill", r.color);
+    text1.textContent = r.label;
+    svg.appendChild(text1);
+
+    const text2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text2.setAttribute("x", mx); text2.setAttribute("y", my + 8);
+    text2.setAttribute("text-anchor", "middle");
+    text2.setAttribute("class", "arrow-fk");
+    text2.textContent = r.fk;
+    svg.appendChild(text2);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// ミニマップ
+// ═══════════════════════════════════════════════════
+const minimapCanvas = document.getElementById("minimap-canvas");
+const minimapCtx = minimapCanvas.getContext("2d");
+const minimapViewport = document.getElementById("minimap-viewport");
+const minimapEl = document.getElementById("minimap");
+const TABLE_COLORS = {
+  "tbl-employees": "#3b5bdb", "tbl-contracts": "#ea580c", "tbl-attendance": "#0891b2",
+  "tbl-payroll": "#059669", "tbl-jobPostings": "#7c3aed", "tbl-evaluations": "#d946ef",
+  "tbl-expenses": "#d97706", "tbl-users": "#64748b", "tbl-keyRotationLogs": "#ef4444"
+};
+
+function updateMinimap() {
+  const tables = canvas.querySelectorAll(".tbl");
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  tables.forEach(t => {
+    minX = Math.min(minX, t.offsetLeft);
+    minY = Math.min(minY, t.offsetTop);
+    maxX = Math.max(maxX, t.offsetLeft + t.offsetWidth);
+    maxY = Math.max(maxY, t.offsetTop + t.offsetHeight);
+  });
+  const pad = 40;
+  const cw = maxX - minX + pad * 2, ch = maxY - minY + pad * 2;
+  const mw = minimapEl.clientWidth, mh = minimapEl.clientHeight;
+  const mapScale = Math.min(mw / cw, mh / ch);
+  minimapCanvas.width = mw * 2; minimapCanvas.height = mh * 2;
+  minimapCanvas.style.width = mw + "px"; minimapCanvas.style.height = mh + "px";
+  const ctx = minimapCtx;
+  ctx.scale(2, 2); // retina
+  ctx.clearRect(0, 0, mw, mh);
+  // テーブル
+  tables.forEach(t => {
+    const x = (t.offsetLeft - minX + pad) * mapScale;
+    const y = (t.offsetTop - minY + pad) * mapScale;
+    const w = t.offsetWidth * mapScale;
+    const h = t.offsetHeight * mapScale;
+    ctx.fillStyle = TABLE_COLORS[t.id] || "#94a3b8";
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(x, y, w, h);
+    ctx.globalAlpha = 1;
+  });
+  // リレーション線
+  RELATIONS.forEach(r => {
+    const fromEl = document.getElementById(r.from);
+    const toEl = document.getElementById(r.to);
+    if (!fromEl || !toEl) return;
+    const fx = (fromEl.offsetLeft + fromEl.offsetWidth / 2 - minX + pad) * mapScale;
+    const fy = (fromEl.offsetTop + fromEl.offsetHeight / 2 - minY + pad) * mapScale;
+    const tx = (toEl.offsetLeft + toEl.offsetWidth / 2 - minX + pad) * mapScale;
+    const ty = (toEl.offsetTop + toEl.offsetHeight / 2 - minY + pad) * mapScale;
+    ctx.strokeStyle = r.color;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+  // ビューポート範囲
+  const vw = viewport.clientWidth, vh = viewport.clientHeight;
+  const vx = (-panX / scale - minX + pad) * mapScale;
+  const vy = (-panY / scale - minY + pad) * mapScale;
+  const vwm = (vw / scale) * mapScale, vhm = (vh / scale) * mapScale;
+  minimapViewport.style.left = vx + "px";
+  minimapViewport.style.top = vy + "px";
+  minimapViewport.style.width = vwm + "px";
+  minimapViewport.style.height = vhm + "px";
+}
+
+// ミニマップクリックでジャンプ
+minimapEl.addEventListener("click", e => {
+  const rect = minimapEl.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const tables = canvas.querySelectorAll(".tbl");
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  tables.forEach(t => {
+    minX = Math.min(minX, t.offsetLeft); minY = Math.min(minY, t.offsetTop);
+    maxX = Math.max(maxX, t.offsetLeft + t.offsetWidth); maxY = Math.max(maxY, t.offsetTop + t.offsetHeight);
+  });
+  const pad = 40;
+  const cw = maxX - minX + pad * 2, ch = maxY - minY + pad * 2;
+  const mapScale = Math.min(minimapEl.clientWidth / cw, minimapEl.clientHeight / ch);
+  const worldX = mx / mapScale + minX - pad;
+  const worldY = my / mapScale + minY - pad;
+  panX = viewport.clientWidth / 2 - worldX * scale;
+  panY = viewport.clientHeight / 2 - worldY * scale;
+  applyTransform();
+});
+
+// ═══════════════════════════════════════════════════
+// 初期化
+// ═══════════════════════════════════════════════════
+window.addEventListener("load", () => {
+  drawArrows();
+  fitAll();
+});
+window.addEventListener("resize", () => {
+  drawArrows();
+  updateMinimap();
+});
+</script>
+</body>
+</html>

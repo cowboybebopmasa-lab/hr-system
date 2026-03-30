@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>HR System システム概要図</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI","Yu Gothic UI",system-ui,sans-serif;background:#f0f4f8;color:#1e293b;font-size:13px;padding:16px 20px}
+.wrap{max-width:1300px;margin:0 auto}
+h1{text-align:center;font-size:1.35rem;font-weight:900;margin-bottom:3px}
+.subtitle{text-align:center;color:#64748b;font-size:.75rem;margin-bottom:14px}
+.brand{color:#3b5bdb}
+
+/* --- セクション枠 --- */
+.sec{border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.sec-label{font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px}
+.s-user  {background:#eff6ff;border:1.5px solid #bfdbfe}
+.s-front {background:#faf5ff;border:1.5px solid #e9d5ff}
+.s-back  {background:#fff7ed;border:1.5px solid #fed7aa}
+.s-cicd  {background:#f0fdf4;border:1.5px dashed #86efac}
+.s-ext   {background:#f8fafc;border:1.5px solid #e2e8f0}
+
+/* --- 上部3列グリッド --- */
+.top-grid{display:grid;grid-template-columns:90px 16px 1fr 16px 120px;gap:0;align-items:stretch;margin-bottom:10px}
+.arr{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#94a3b8;font-size:.8rem;padding:0 2px}
+.arr small{font-size:.52rem;line-height:1;text-align:center}
+
+/* --- ユーザーボックス --- */
+.u-box{background:#fff;border-radius:7px;padding:5px 7px;text-align:center;margin-bottom:5px;border:1.5px solid}
+.u-box:last-child{margin-bottom:0}
+.u-icon{font-size:1.1rem}
+.u-name{font-size:.62rem;font-weight:800}
+.u-sub {font-size:.56rem;color:#64748b}
+
+/* --- フロントエンドアイテム --- */
+.fe-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.fe-item{background:#fff;border:1px solid #e9d5ff;border-radius:5px;padding:3px 6px;font-size:.58rem}
+.fe-item b{color:#6d28d9;display:block;font-size:.6rem}
+
+/* --- バックエンド内2列 --- */
+.be-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.be-panel{background:#fff;border:1px solid #fed7aa;border-radius:6px;overflow:hidden}
+.be-head{color:#fff;font-size:.58rem;font-weight:700;padding:3px 8px}
+.be-row{display:flex;align-items:center;gap:4px;padding:2px 7px;border-bottom:1px solid #fff7ed;font-size:.58rem}
+.be-row:last-child{border-bottom:none}
+.num{width:13px;height:13px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:800;color:#fff;flex-shrink:0}
+.badge{font-size:.52rem;font-weight:700;padding:0 4px;border-radius:2px;flex-shrink:0}
+.bg-post{background:#dcfce7;color:#166534}
+.bg-get {background:#dbeafe;color:#1e40af}
+
+/* --- CI/CDフロー --- */
+.cicd-flow{display:flex;align-items:center;gap:5px;flex-wrap:nowrap}
+.cicd-box{background:#fff;border:1px solid #86efac;border-radius:5px;padding:3px 9px;font-size:.6rem;text-align:center;flex-shrink:0}
+.cicd-box b{color:#166534;display:block}
+.cicd-box small{color:#94a3b8;font-size:.56rem}
+.cicd-arr{color:#86efac;font-size:.8rem;flex-shrink:0}
+.cicd-note{font-size:.55rem;color:#94a3b8;border-left:1px solid #e2e8f0;padding-left:8px;margin-left:4px;line-height:1.5}
+
+/* --- 右サマリ列 --- */
+.sum-item{border-radius:6px;padding:4px 8px;font-size:.58rem;margin-bottom:4px;border:1px solid}
+.sum-item:last-child{margin-bottom:0}
+.sum-item b{display:block;font-size:.62rem}
+
+/* --- 外部サービス --- */
+.ext-top{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.ext-bot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ext-card{border-radius:8px;padding:9px 11px;border:1.5px solid}
+.ext-card .en{font-size:.75rem;font-weight:800;margin-bottom:5px}
+.ext-card .ed{font-size:.64rem;color:#475569;line-height:1.55}
+.ext-tag{display:inline-block;font-size:.58rem;font-weight:600;padding:1px 6px;border-radius:3px;margin-top:5px}
+.ext-openai   {border-color:#10a37f;background:linear-gradient(135deg,#f0fdf4,#dcfce7)}
+.ext-firebase {border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+.ext-vision   {border-color:#0891b2;background:linear-gradient(135deg,#f0f9ff,#e0f2fe)}
+.ext-gdrive   {border-color:#22c55e;background:linear-gradient(135deg,#f0fdf4,#dcfce7)}
+.ext-mailer   {border-color:#ef4444;background:linear-gradient(135deg,#fff1f2,#ffe4e6)}
+.ext-github   {border-color:#24292f;background:linear-gradient(135deg,#f6f8fa,#eaeef2)}
+.ext-vercel   {border-color:#555;background:linear-gradient(135deg,#fafafa,#f0f0f0)}
+
+/* --- Firestoreコレクション --- */
+.fs-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:6px}
+.fs-item{background:#fff;border:1px solid #fef3c7;border-radius:5px;padding:4px 7px;font-size:.58rem;text-align:center}
+.fs-item b{color:#d97706;display:block;font-size:.6rem}
+
+/* --- データフロー --- */
+.flow-sec{margin-bottom:10px}
+.flow-label{font-size:.64rem;color:#94a3b8;margin-bottom:3px}
+.flow-row{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;margin-bottom:8px}
+.fb{background:#fff;border:1.5px solid #cbd5e1;border-radius:6px;padding:5px 9px;font-size:.65rem;font-weight:600;text-align:center;white-space:nowrap;flex-shrink:0}
+.fb small{display:block;font-size:.56rem;font-weight:400;color:#94a3b8}
+.fb.blue  {border-color:#3b5bdb;background:#eff6ff;color:#3b5bdb}
+.fb.purple{border-color:#7c3aed;background:#faf5ff;color:#7c3aed}
+.fb.orange{border-color:#ea580c;background:#fff7ed;color:#ea580c}
+.fb.green {border-color:#059669;background:#f0fdf4;color:#059669}
+.fb.pink  {border-color:#d946ef;background:#fdf4ff;color:#d946ef}
+.fb.yellow{border-color:#d97706;background:#fffbeb;color:#d97706}
+.fb.gray  {border-color:#94a3b8;background:#f8fafc;color:#64748b}
+.fb.cyan  {border-color:#0891b2;background:#f0f9ff;color:#0891b2}
+.fb.red   {border-color:#ef4444;background:#fff1f2;color:#ef4444}
+.fb.gdrive{border-color:#22c55e;background:#f0fdf4;color:#16a34a}
+.fa{color:#94a3b8;font-size:.8rem;padding:0 3px;flex-shrink:0}
+
+/* --- 凡例 --- */
+.legend{display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:4px;font-size:.65rem;color:#64748b}
+.ld{width:8px;height:8px;border-radius:50%}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1><span class="brand">HR System</span> システム概要図</h1>
+<p class="subtitle">人材派遣向けAIマッチングシステム — アーキテクチャ &amp; データフロー（2026年版）</p>
+<div style="text-align:center;margin-bottom:12px;font-size:.7rem"><a href="/er-diagram.html" style="color:#3b5bdb;text-decoration:none;font-weight:600">📐 ER図（データベース設計）を見る →</a></div>
+
+<!-- ══ 上部3列グリッド ══ -->
+<div class="top-grid">
+
+  <!-- 1. ユーザー -->
+  <div class="sec s-user" style="padding:8px 10px">
+    <div class="sec-label" style="color:#3b5bdb">👤 ユーザー</div>
+    <div class="u-box" style="border-color:#3b5bdb">
+      <div class="u-icon">🏢</div>
+      <div class="u-name" style="color:#3b5bdb">管理者 / コーディネーター</div>
+      <div class="u-sub">ブラウザ</div>
+    </div>
+    <div class="u-box" style="border-color:#7c3aed">
+      <div class="u-icon">👨‍💻</div>
+      <div class="u-name" style="color:#7c3aed">開発者</div>
+      <div class="u-sub">git push</div>
+    </div>
+  </div>
+
+  <!-- 矢印 -->
+  <div class="arr">
+    <span title="HTTPS">⇄</span><small>HTTPS</small>
+    <span title="git push" style="margin-top:4px">→</span><small>push</small>
+  </div>
+
+  <!-- 2. 中央：フロント＋バック＋CI/CD -->
+  <div style="display:flex;flex-direction:column;gap:6px">
+
+    <!-- フロント ⇄ バック -->
+    <div style="display:grid;grid-template-columns:1fr 14px 1fr;gap:0;align-items:stretch">
+
+      <!-- フロントエンド -->
+      <div class="sec s-front" style="padding:8px 10px">
+        <div class="sec-label" style="color:#6d28d9">🖥️ フロントエンド（Next.js 16 + React 19）</div>
+        <div class="fe-grid">
+          <div class="fe-item"><b>📊 dashboard</b>ダッシュボード</div>
+          <div class="fe-item"><b>👥 employees</b>従業員管理</div>
+          <div class="fe-item"><b>🕐 attendance</b>勤怠管理</div>
+          <div class="fe-item"><b>📋 contracts</b>契約管理</div>
+          <div class="fe-item"><b>💰 payroll</b>給与管理</div>
+          <div class="fe-item"><b>🏢 recruitment</b>採用管理</div>
+          <div class="fe-item"><b>⭐ evaluation</b>評価管理</div>
+          <div class="fe-item"><b>✨ matching</b>AIマッチング</div>
+          <div class="fe-item"><b>📷 ocr</b>OCR読取</div>
+          <div class="fe-item"><b>🧾 expenses</b>経費管理</div>
+          <div class="fe-item"><b>🔐 login</b>ログイン</div>
+          <div class="fe-item"><b>📜 consent</b>同意画面</div>
+        </div>
+      </div>
+
+      <!-- 矢印 -->
+      <div class="arr"><span>⇄</span><small>JSON</small></div>
+
+      <!-- バックエンド -->
+      <div class="sec s-back" style="padding:8px 10px">
+        <div class="sec-label" style="color:#c2410c">⚙️ バックエンド（Vercel Functions）</div>
+        <div class="be-grid">
+          <div class="be-panel">
+            <div class="be-head" style="background:#ea580c">📊 OCR/マッチング パイプライン</div>
+            <div class="be-row"><span class="num" style="background:#3b5bdb">1</span>ファイル受信 / URL取得</div>
+            <div class="be-row"><span class="num" style="background:#0891b2">2</span>Cloud Vision テキスト抽出</div>
+            <div class="be-row"><span class="num" style="background:#d946ef">3</span>LLM 構造化（OpenAI/Gemini）</div>
+            <div class="be-row"><span class="num" style="background:#d97706">4</span>Firestore 登録</div>
+            <div class="be-row"><span class="num" style="background:#7c3aed">5</span>ベクトル検索マッチング</div>
+            <div class="be-row"><span class="num" style="background:#059669">6</span>スコアリング・結果返却</div>
+          </div>
+          <div class="be-panel">
+            <div class="be-head" style="background:#f97316">🔌 APIエンドポイント</div>
+            <div class="be-row"><span class="badge bg-post">POST</span>/api/matching</div>
+            <div class="be-row"><span class="badge bg-post">POST</span>/api/ocr/image</div>
+            <div class="be-row"><span class="badge bg-post">POST</span>/api/ocr/url</div>
+            <div class="be-row"><span class="badge bg-get">GET</span>/api/cron/contract-alerts</div>
+            <div class="be-row"><span class="badge bg-get">GET</span>/api/cron/backup-gdrive</div>
+            <div class="be-row"><span class="badge bg-get">GET</span>/api/admin/key-rotation</div>
+            <div class="be-row"><span class="badge bg-post">POST</span>/api/admin/key-rotation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CI/CD（下段・全幅） -->
+    <div class="sec s-cicd" style="padding:7px 10px">
+      <div class="sec-label" style="color:#166534">🔄 CI/CD インフラ（GitHub → Vercel）</div>
+      <div class="cicd-flow">
+        <div class="cicd-box"><b>🐙 GitHub</b><small>ソースコード管理</small></div>
+        <span class="cicd-arr">→ push →</span>
+        <div class="cicd-box"><b>▲ Vercel</b><small>自動ビルド・デプロイ</small></div>
+        <span class="cicd-arr">→ deploy →</span>
+        <div class="cicd-box"><b>🌐 本番URL</b><small>hr-system.vercel.app</small></div>
+        <div class="cicd-note">※ ローカル開発<br>localhost:3000<br>（next dev）</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 矢印 -->
+  <div class="arr"><span>⇄</span><small>API</small></div>
+
+  <!-- 3. 右サマリ -->
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <div class="sum-item" style="border-color:#10a37f;background:#f0fdf4"><b style="color:#10a37f">🤖 OpenAI / Gemini</b>AI構造化・ベクトル生成</div>
+    <div class="sum-item" style="border-color:#f59e0b;background:#fffbeb"><b style="color:#d97706">🔥 Firebase</b>Auth・Firestore</div>
+    <div class="sum-item" style="border-color:#0891b2;background:#f0f9ff"><b style="color:#0891b2">👁️ Cloud Vision</b>画像/PDF OCR</div>
+    <div class="sum-item" style="border-color:#22c55e;background:#f0fdf4"><b style="color:#166534">📁 Google Drive</b>暗号化バックアップ</div>
+    <div class="sum-item" style="border-color:#ef4444;background:#fff1f2"><b style="color:#dc2626">📧 SendGrid / Gmail</b>アラートメール</div>
+    <div class="sum-item" style="border-color:#7c3aed;background:#faf5ff"><b style="color:#7c3aed">⏰ Vercel Cron</b>定期バッチ実行</div>
+  </div>
+
+</div>
+
+<!-- ══ 外部サービス・クラウド ══ -->
+<div class="sec s-ext">
+  <div class="sec-label" style="color:#475569">☁️ 外部サービス・クラウド</div>
+  <!-- 上段4列 -->
+  <div class="ext-top">
+    <div class="ext-card ext-openai">
+      <div class="en">🤖 OpenAI / Gemini</div>
+      <div class="ed">AI構造化・ベクトル生成<br>• OpenAI: gpt-4o-mini<br>• Gemini: gemini-2.0-flash<br>• 履歴書/求人票/契約書/領収書 → JSON構造化<br>• スキルベクトル化・類似度マッチング</div>
+      <span class="ext-tag" style="background:#dcfce7;color:#14532d">LLM API</span>
+    </div>
+    <div class="ext-card ext-firebase">
+      <div class="en">🔥 Firebase</div>
+      <div class="ed"><strong>Auth</strong>: メール認証・セッション管理<br><strong>Firestore</strong>: NoSQL DB + ベクトル検索<br>• employees / contracts / attendance<br>• payroll / jobPostings / evaluations<br>• expenses / users / keyRotationLogs</div>
+      <span class="ext-tag" style="background:#fef3c7;color:#92400e">Firebase v12</span>
+    </div>
+    <div class="ext-card ext-vision">
+      <div class="en">👁️ Cloud Vision API</div>
+      <div class="ed">画像・PDF OCR テキスト抽出<br>• TEXT_DETECTION モード<br>• 対応形式: PNG, JPEG, WebP, PDF<br>• 履歴書・求人票・領収書・契約書の文字認識</div>
+      <span class="ext-tag" style="background:#e0f2fe;color:#0c4a6e">Vision API v1</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="ext-card ext-gdrive" style="flex:1">
+        <div class="en">📁 Google Drive</div>
+        <div class="ed">暗号化バックアップ保管庫<br>• AES-256-GCM 暗号化<br>• 30日保持・自動クリーンアップ<br>• キーローテーション対応</div>
+        <span class="ext-tag" style="background:#dcfce7;color:#14532d">Drive API v3</span>
+      </div>
+      <div class="ext-card ext-mailer">
+        <div class="en">📧 SendGrid / Gmail API</div>
+        <div class="ed">契約期限アラートメール送信<br>• 60/30/14/7/3/1日前通知<br>• Vercel Cron 連動（毎朝9時JST）</div>
+        <span class="ext-tag" style="background:#ffe4e6;color:#9f1239">Mail API</span>
+      </div>
+    </div>
+  </div>
+  <!-- 下段2列 -->
+  <div class="ext-bot">
+    <div class="ext-card ext-github">
+      <div class="en">🐙 GitHub</div>
+      <div class="ed">ソースコード管理<br>• Next.js App Router（src/app/）<br>• Vercel と連携して push で自動デプロイをトリガー</div>
+      <span class="ext-tag" style="background:#eaeef2;color:#24292f">Git リポジトリ</span>
+    </div>
+    <div class="ext-card ext-vercel">
+      <div class="en">▲ Vercel</div>
+      <div class="ed">Serverless ホスティング + Cron<br>• GitHub push で自動ビルド・デプロイ<br>• Vercel Functions（APIルート）<br>• Cron: contract-alerts（毎日UTC 00:00）/ backup-gdrive（毎日UTC 17:00）</div>
+      <span class="ext-tag" style="background:#f0f0f0;color:#000">Serverless</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Firestoreコレクション一覧 ══ -->
+<div class="sec s-ext">
+  <div class="sec-label" style="color:#d97706">🗄️ Firestore コレクション</div>
+  <div class="fs-grid">
+    <div class="fs-item"><b>👥 employees</b>従業員・派遣スタッフ</div>
+    <div class="fs-item"><b>📋 contracts</b>派遣契約情報</div>
+    <div class="fs-item"><b>🕐 attendance</b>勤怠記録</div>
+    <div class="fs-item"><b>💰 payroll</b>給与明細</div>
+    <div class="fs-item"><b>🏢 jobPostings</b>求人・案件情報</div>
+    <div class="fs-item"><b>⭐ evaluations</b>人事評価</div>
+    <div class="fs-item"><b>🧾 expenses</b>経費精算</div>
+    <div class="fs-item"><b>👤 users</b>認証ユーザー</div>
+    <div class="fs-item"><b>🔑 keyRotationLogs</b>キーローテーション履歴</div>
+    <div class="fs-item"><b>🔍 skillVectors</b>スキルベクトル索引</div>
+  </div>
+</div>
+
+<!-- ══ 主要データフロー ══ -->
+<div class="sec s-ext">
+  <div class="sec-label" style="color:#475569">📡 主要データフロー</div>
+
+  <div class="flow-label">① AIマッチングフロー</div>
+  <div class="flow-row">
+    <div class="fb blue">👤 管理者<small>案件・スキル入力</small></div><div class="fa">→</div>
+    <div class="fb purple">🌐 matching<small>マッチング画面</small></div><div class="fa">→POST→</div>
+    <div class="fb orange">⚙️ Vercel Functions<small>/api/matching</small></div><div class="fa">→</div>
+    <div class="fb pink">🤖 LLM API<small>スキルベクトル化</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firestore<small>ベクトル検索</small></div><div class="fa">→</div>
+    <div class="fb gray">📊 スコアリング<small>ルールベース+AI</small></div><div class="fa">→JSON→</div>
+    <div class="fb purple">📋 候補者一覧<small>マッチ度表示</small></div>
+  </div>
+
+  <div class="flow-label">② OCR読取フロー（画像/PDF）</div>
+  <div class="flow-row">
+    <div class="fb blue">👤 ファイルアップロード<small>PNG/JPEG/PDF</small></div><div class="fa">→</div>
+    <div class="fb purple">📷 OCR画面<small>ocr/page.tsx</small></div><div class="fa">→POST→</div>
+    <div class="fb orange">⚙️ Vercel Functions<small>/api/ocr/image</small></div><div class="fa">→</div>
+    <div class="fb cyan">👁️ Cloud Vision<small>TEXT_DETECTION</small></div><div class="fa">→テキスト→</div>
+    <div class="fb pink">🤖 LLM API<small>JSON構造化</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firestore<small>データ登録</small></div>
+  </div>
+
+  <div class="flow-label">③ URL取込フロー</div>
+  <div class="flow-row">
+    <div class="fb blue">👤 URL入力<small>採用ページ等</small></div><div class="fa">→</div>
+    <div class="fb purple">📷 OCR画面<small>ocr/page.tsx</small></div><div class="fa">→POST→</div>
+    <div class="fb orange">⚙️ Vercel Functions<small>/api/ocr/url</small></div><div class="fa">→</div>
+    <div class="fb gray">🔍 HTMLフェッチ<small>テキスト抽出</small></div><div class="fa">→</div>
+    <div class="fb pink">🤖 LLM API<small>JSON構造化</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firestore<small>データ登録</small></div>
+  </div>
+
+  <div class="flow-label">④ 認証フロー</div>
+  <div class="flow-row">
+    <div class="fb blue">👤 メール/PW入力</div><div class="fa">→</div>
+    <div class="fb purple">🔐 login<small>Firebase SDK</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firebase Auth<small>認証・トークン発行</small></div><div class="fa">→IDトークン→</div>
+    <div class="fb orange">⚙️ Vercel Functions<small>トークン検証</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firestore<small>ユーザー情報取得</small></div>
+  </div>
+
+  <div class="flow-label">⑤ 契約アラートフロー（Vercel Cron 毎朝）</div>
+  <div class="flow-row">
+    <div class="fb green">⏰ Vercel Cron<small>毎日 UTC 00:00</small></div><div class="fa">→GET→</div>
+    <div class="fb orange">⚙️ Vercel Functions<small>/api/cron/contract-alerts</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firestore<small>契約期限チェック</small></div><div class="fa">→60/30/14/7/3/1日前→</div>
+    <div class="fb red">📧 メール送信<small>SendGrid / Gmail</small></div><div class="fa">→</div>
+    <div class="fb blue">👤 管理者<small>アラート受信</small></div>
+  </div>
+
+  <div class="flow-label">⑥ バックアップフロー（Vercel Cron 深夜）</div>
+  <div class="flow-row">
+    <div class="fb green">⏰ Vercel Cron<small>毎日 UTC 17:00</small></div><div class="fa">→GET→</div>
+    <div class="fb orange">⚙️ Vercel Functions<small>/api/cron/backup-gdrive</small></div><div class="fa">→</div>
+    <div class="fb yellow">🔥 Firestore<small>全コレクション取得</small></div><div class="fa">→</div>
+    <div class="fb gray">🔒 AES-256-GCM<small>暗号化圧縮</small></div><div class="fa">→</div>
+    <div class="fb gdrive">📁 Google Drive<small>バックアップ保存</small></div><div class="fa">→</div>
+    <div class="fb gray">🗑️ クリーンアップ<small>30日超を自動削除</small></div>
+  </div>
+
+  <div class="flow-label">⑦ デプロイフロー</div>
+  <div class="flow-row">
+    <div class="fb purple">👨‍💻 開発者<small>コード修正</small></div><div class="fa">→git push→</div>
+    <div class="fb green">🐙 GitHub<small>リポジトリ</small></div><div class="fa">→自動検知→</div>
+    <div class="fb green">▲ Vercel<small>自動ビルド</small></div><div class="fa">→デプロイ完了→</div>
+    <div class="fb green">🌐 本番URL<small>hr-system.vercel.app</small></div><div class="fa">←HTTPS←</div>
+    <div class="fb blue">👤 管理者<small>ブラウザアクセス</small></div>
+  </div>
+</div>
+
+<!-- ══ 凡例 ══ -->
+<div class="legend">
+  <div class="li"><div class="ld" style="background:#3b5bdb"></div>ユーザー操作</div>
+  <div class="li"><div class="ld" style="background:#7c3aed"></div>フロントエンド</div>
+  <div class="li"><div class="ld" style="background:#ea580c"></div>Vercel Functions</div>
+  <div class="li"><div class="ld" style="background:#d946ef"></div>AI（OpenAI/Gemini）</div>
+  <div class="li"><div class="ld" style="background:#d97706"></div>Firebase</div>
+  <div class="li"><div class="ld" style="background:#0891b2"></div>Cloud Vision</div>
+  <div class="li"><div class="ld" style="background:#22c55e"></div>Google Drive</div>
+  <div class="li"><div class="ld" style="background:#ef4444"></div>メール送信</div>
+  <div class="li"><div class="ld" style="background:#059669"></div>CI/CD・Cron</div>
+  <div class="li"><div class="ld" style="background:#64748b"></div>中間処理</div>
+</div>
+
+</div>
+</body>
+</html>
