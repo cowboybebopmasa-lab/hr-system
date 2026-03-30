@@ -134,6 +134,27 @@ async function structureWithGemini(text: string, type: string) {
 
 // --- 構造化プロンプト ---
 function getStructurePrompt(text: string, type: string): string {
+  if (type === "contract") {
+    return `以下は契約書から抽出したテキストです。JSONで構造化してください。
+
+テキスト:
+${text}
+
+以下のJSON形式で出力してください:
+{
+  "employeeName": "従業員名/派遣スタッフ名",
+  "clientCompany": "派遣先企業名/委託元企業名",
+  "role": "業務内容・役職",
+  "startDate": "契約開始日(YYYY-MM-DD)",
+  "endDate": "契約終了日(YYYY-MM-DD)",
+  "hourlySalary": 数値(時給、不明なら0),
+  "billingRate": 数値(請求単価、不明なら0),
+  "workLocation": "勤務地",
+  "workHours": "勤務時間",
+  "notes": "特記事項・備考"
+}`;
+  }
+
   if (type === "job_posting") {
     return `以下は求人票から抽出したテキストです。JSONで構造化してください。
 
@@ -187,42 +208,57 @@ ${text}
 
 // --- LLM未設定時の簡易パース ---
 function simpleStructure(text: string, type: string) {
+  if (type === "contract") {
+    return {
+      employeeName: "", clientCompany: "", role: "",
+      startDate: "", endDate: "", hourlySalary: 0, billingRate: 0,
+      workLocation: "", workHours: "", notes: "",
+      _note: "LLM APIキー未設定のため、手動での入力が必要です", _rawText: text,
+    };
+  }
   if (type === "job_posting") {
     return {
-      clientCompany: "",
-      title: "",
-      description: text.slice(0, 200),
-      requiredSkills: [],
-      preferredSkills: [],
-      location: "",
-      salaryMin: 0,
-      salaryMax: 0,
-      startDate: "",
-      duration: "",
-      _note: "LLM APIキー未設定のため、手動での入力が必要です",
-      _rawText: text,
+      clientCompany: "", title: "", description: text.slice(0, 200),
+      requiredSkills: [], preferredSkills: [], location: "",
+      salaryMin: 0, salaryMax: 0, startDate: "", duration: "",
+      _note: "LLM APIキー未設定のため、手動での入力が必要です", _rawText: text,
     };
   }
   return {
-    name: "",
-    nameKana: "",
-    email: "",
-    phone: "",
-    address: "",
-    dateOfBirth: "",
-    gender: "other",
-    skills: [],
-    certifications: [],
-    experience: [],
-    desiredSalary: 0,
-    preferredLocations: [],
-    _note: "LLM APIキー未設定のため、手動での入力が必要です",
-    _rawText: text,
+    name: "", nameKana: "", email: "", phone: "", address: "",
+    dateOfBirth: "", gender: "other", skills: [], certifications: [],
+    experience: [], desiredSalary: 0, preferredLocations: [],
+    _note: "LLM APIキー未設定のため、手動での入力が必要です", _rawText: text,
   };
 }
 
 // --- デモ用モックOCRテキスト ---
 function generateMockOcrText(type: string): string {
+  if (type === "contract") {
+    return `業務委託契約書
+
+甲（委託者）: 株式会社テックソリューション
+乙（受託者）: 田中 太郎
+
+第1条（業務内容）
+甲は乙に対し、以下の業務を委託する。
+業務内容: フロントエンドエンジニアとしてのWebアプリケーション開発
+
+第2条（契約期間）
+契約期間: 2024年4月1日 から 2024年9月30日 まで
+
+第3条（報酬）
+時間単価: 2,800円（税別）
+請求単価: 4,500円（税別）
+支払日: 翌月末日
+
+第4条（勤務条件）
+勤務地: 東京都渋谷区神南1-2-3 テックビル5F
+勤務時間: 9:00〜18:00（休憩1時間）
+
+第5条（特記事項）
+リモートワーク併用可（週3日出社）`;
+  }
   if (type === "job_posting") {
     return `求人票
 株式会社テックイノベーション

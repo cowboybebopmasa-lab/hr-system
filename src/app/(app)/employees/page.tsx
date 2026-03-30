@@ -25,7 +25,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { mockEmployees } from "@/lib/mock-data";
 import type { Employee } from "@/types";
-import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Eye, Trash2 } from "lucide-react";
+import { OcrUploadButton } from "@/components/ocr-upload-button";
 
 const statusLabels: Record<Employee["status"], string> = {
   active: "在籍",
@@ -111,7 +112,27 @@ export default function EmployeesPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>従業員新規登録</DialogTitle>
+                <div className="flex items-center justify-between">
+                  <DialogTitle>従業員新規登録</DialogTitle>
+                  <OcrUploadButton
+                    documentType="resume"
+                    label="履歴書OCR"
+                    onResult={(data) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        name: String(data.name || prev.name),
+                        nameKana: String(data.nameKana || prev.nameKana),
+                        email: String(data.email || prev.email),
+                        phone: String(data.phone || prev.phone),
+                        address: String(data.address || prev.address),
+                        dateOfBirth: String(data.dateOfBirth || prev.dateOfBirth),
+                        skills: Array.isArray(data.skills) ? data.skills.join(", ") : prev.skills,
+                        desiredSalary: data.desiredSalary ? String(data.desiredSalary) : prev.desiredSalary,
+                        preferredLocations: Array.isArray(data.preferredLocations) ? data.preferredLocations.join(", ") : prev.preferredLocations,
+                      }));
+                    }}
+                  />
+                </div>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">

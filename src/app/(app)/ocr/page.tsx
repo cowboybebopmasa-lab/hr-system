@@ -152,6 +152,12 @@ export default function OcrPage() {
                             求人票・案件情報
                           </div>
                         </SelectItem>
+                        <SelectItem value="contract">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            契約書
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -414,5 +420,13 @@ const fieldLabels: Record<string, string> = {
   salaryMin: "月給下限",
   salaryMax: "月給上限",
   startDate: "開始日",
+  endDate: "終了日",
   duration: "期間",
+  employeeName: "従業員名",
+  role: "業務内容・役職",
+  hourlySalary: "時給",
+  billingRate: "請求単価",
+  workLocation: "勤務地",
+  workHours: "勤務時間",
+  notes: "備考",
 };

@@ -96,10 +96,12 @@ export function AppSidebar() {
 
         {/* 人事管理 */}
         <SidebarGroup>
-          <SidebarGroupLabel>
-            <UserCog className="h-3.5 w-3.5 mr-1.5" />
-            人事管理
-          </SidebarGroupLabel>
+          <div className="px-3 py-2 mb-1 rounded-md bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-500">
+            <SidebarGroupLabel className="text-blue-700 dark:text-blue-300 font-bold text-xs tracking-wide">
+              <UserCog className="h-3.5 w-3.5 mr-1.5" />
+              人事管理
+            </SidebarGroupLabel>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {hrMenuItems.map(renderMenuItem)}
@@ -109,10 +111,12 @@ export function AppSidebar() {
 
         {/* 会計管理 */}
         <SidebarGroup>
-          <SidebarGroupLabel>
-            <Calculator className="h-3.5 w-3.5 mr-1.5" />
-            会計管理
-          </SidebarGroupLabel>
+          <div className="px-3 py-2 mb-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-500">
+            <SidebarGroupLabel className="text-emerald-700 dark:text-emerald-300 font-bold text-xs tracking-wide">
+              <Calculator className="h-3.5 w-3.5 mr-1.5" />
+              会計管理
+            </SidebarGroupLabel>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {accountingMenuItems.map(renderMenuItem)}

@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { mockJobPostings } from "@/lib/mock-data";
 import type { JobPosting } from "@/types";
 import { Plus, Search, Users } from "lucide-react";
+import { OcrUploadButton } from "@/components/ocr-upload-button";
 
 const statusLabels: Record<JobPosting["status"], string> = {
   open: "募集中", filled: "充足", closed: "終了", on_hold: "保留",
@@ -77,7 +78,30 @@ export default function RecruitmentPage() {
               <Plus className="mr-2 h-4 w-4" />新規案件
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>新規案件登録</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle>新規案件登録</DialogTitle>
+                  <OcrUploadButton
+                    documentType="job_posting"
+                    label="求人票OCR"
+                    onResult={(data) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        clientCompany: String(data.clientCompany || prev.clientCompany),
+                        title: String(data.title || prev.title),
+                        description: String(data.description || prev.description),
+                        requiredSkills: Array.isArray(data.requiredSkills) ? data.requiredSkills.join(", ") : prev.requiredSkills,
+                        preferredSkills: Array.isArray(data.preferredSkills) ? data.preferredSkills.join(", ") : prev.preferredSkills,
+                        location: String(data.location || prev.location),
+                        salaryMin: data.salaryMin ? String(data.salaryMin) : prev.salaryMin,
+                        salaryMax: data.salaryMax ? String(data.salaryMax) : prev.salaryMax,
+                        startDate: String(data.startDate || prev.startDate),
+                        duration: String(data.duration || prev.duration),
+                      }));
+                    }}
+                  />
+                </div>
+              </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>企業名</Label><Input value={formData.clientCompany} onChange={(e) => setFormData({ ...formData, clientCompany: e.target.value })} /></div>

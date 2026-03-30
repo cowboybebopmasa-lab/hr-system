@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { mockContracts, mockEmployees } from "@/lib/mock-data";
 import type { Contract } from "@/types";
 import { Plus, Search, AlertTriangle } from "lucide-react";
+import { OcrUploadButton } from "@/components/ocr-upload-button";
 
 const statusLabels: Record<Contract["status"], string> = {
   active: "有効", expiring_soon: "期限間近", expired: "期限切れ", terminated: "解約",
@@ -95,7 +96,27 @@ export default function ContractsPage() {
               <Plus className="mr-2 h-4 w-4" />新規契約
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>新規契約登録</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle>新規契約登録</DialogTitle>
+                  <OcrUploadButton
+                    documentType="contract"
+                    label="契約書OCR"
+                    onResult={(data) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        clientCompany: String(data.clientCompany || prev.clientCompany),
+                        role: String(data.role || prev.role),
+                        startDate: String(data.startDate || prev.startDate),
+                        endDate: String(data.endDate || prev.endDate),
+                        hourlySalary: data.hourlySalary ? String(data.hourlySalary) : prev.hourlySalary,
+                        billingRate: data.billingRate ? String(data.billingRate) : prev.billingRate,
+                        notes: String(data.notes || prev.notes),
+                      }));
+                    }}
+                  />
+                </div>
+              </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div>
                   <Label>従業員</Label>
