@@ -445,38 +445,45 @@ function fitAll() {
 // ═══════════════════════════════════════════════════
 // SVG 矢印描画 — テーブル間のリレーションを可視化
 // ═══════════════════════════════════════════════════
+// --- リレーション定義 ---
+// fromField: PK側の項目名（.col-nameで検索）, toField: FK側の項目名
 const RELATIONS = [
-  { from: "tbl-employees", to: "tbl-contracts",    label: "1 : N", fk: "employeeId", color: "#ea580c" },
-  { from: "tbl-employees", to: "tbl-attendance",   label: "1 : N", fk: "employeeId", color: "#0891b2" },
-  { from: "tbl-employees", to: "tbl-payroll",      label: "1 : N", fk: "employeeId", color: "#059669" },
-  { from: "tbl-employees", to: "tbl-evaluations",  label: "1 : N", fk: "employeeId", color: "#d946ef" },
-  { from: "tbl-employees", to: "tbl-expenses",     label: "1 : N", fk: "employeeId", color: "#d97706" },
-  { from: "tbl-jobPostings", to: "tbl-employees",  label: "N : N", fk: "matchedCandidates (embedded)", color: "#7c3aed" },
+  { from: "tbl-employees", to: "tbl-contracts",    label: "1 : N", fk: "employeeId", color: "#ea580c",  fromField: "id", toField: "employeeId" },
+  { from: "tbl-employees", to: "tbl-attendance",   label: "1 : N", fk: "employeeId", color: "#0891b2",  fromField: "id", toField: "employeeId" },
+  { from: "tbl-employees", to: "tbl-payroll",      label: "1 : N", fk: "employeeId", color: "#059669",  fromField: "id", toField: "employeeId" },
+  { from: "tbl-employees", to: "tbl-evaluations",  label: "1 : N", fk: "employeeId", color: "#d946ef",  fromField: "id", toField: "employeeId" },
+  { from: "tbl-employees", to: "tbl-expenses",     label: "1 : N", fk: "employeeId", color: "#d97706",  fromField: "id", toField: "employeeId" },
+  { from: "tbl-jobPostings", to: "tbl-employees",  label: "N : N", fk: "matchedCandidates", color: "#7c3aed", fromField: "matchedCandidates", toField: "id" },
 ];
 
-function getAnchor(el, side) {
-  const x = el.offsetLeft, y = el.offsetTop, w = el.offsetWidth, h = el.offsetHeight;
-  switch (side) {
-    case "top":    return { x: x + w / 2, y };
-    case "bottom": return { x: x + w / 2, y: y + h };
-    case "left":   return { x, y: y + h / 2 };
-    case "right":  return { x: x + w, y: y + h / 2 };
+// テーブル内の特定フィールド行のY位置を取得（canvas座標系）
+function getFieldRowY(tableEl, fieldName) {
+  const rows = tableEl.querySelectorAll(".tbl-row");
+  for (const row of rows) {
+    const colName = row.querySelector(".col-name");
+    if (colName && colName.textContent.includes(fieldName)) {
+      // 行の中心Y = テーブルtop + 行のoffsetTop + 行の高さ/2
+      return tableEl.offsetTop + row.offsetTop + row.offsetHeight / 2;
+    }
   }
+  // 見つからなければテーブル中央
+  return tableEl.offsetTop + tableEl.offsetHeight / 2;
 }
 
-function bestSides(fromEl, toEl) {
-  const fc = { x: fromEl.offsetLeft + fromEl.offsetWidth / 2, y: fromEl.offsetTop + fromEl.offsetHeight / 2 };
-  const tc = { x: toEl.offsetLeft + toEl.offsetWidth / 2, y: toEl.offsetTop + toEl.offsetHeight / 2 };
-  const dx = tc.x - fc.x, dy = tc.y - fc.y;
-  let fromSide, toSide;
-  if (Math.abs(dx) > Math.abs(dy)) {
-    fromSide = dx > 0 ? "right" : "left";
-    toSide = dx > 0 ? "left" : "right";
-  } else {
-    fromSide = dy > 0 ? "bottom" : "top";
-    toSide = dy > 0 ? "top" : "bottom";
-  }
-  return { fromSide, toSide };
+// 項目レベルのアンカーポイントを計算
+function getFieldAnchor(tableEl, fieldName, side) {
+  const x = tableEl.offsetLeft;
+  const w = tableEl.offsetWidth;
+  const y = getFieldRowY(tableEl, fieldName);
+  if (side === "left") return { x, y };
+  return { x: x + w, y };
+}
+
+function bestSide(fromEl, toEl) {
+  const fc = fromEl.offsetLeft + fromEl.offsetWidth / 2;
+  const tc = toEl.offsetLeft + toEl.offsetWidth / 2;
+  if (tc > fc) return { fromSide: "right", toSide: "left" };
+  return { fromSide: "left", toSide: "right" };
 }
 
 function drawArrows() {
@@ -516,34 +523,74 @@ function drawArrows() {
     const toEl = document.getElementById(r.to);
     if (!fromEl || !toEl) return;
 
-    const { fromSide, toSide } = bestSides(fromEl, toEl);
-    const a = getAnchor(fromEl, fromSide);
-    const b = getAnchor(toEl, toSide);
+    const { fromSide, toSide } = bestSide(fromEl, toEl);
 
-    // ベジェ曲線の制御点
-    const dist = Math.hypot(b.x - a.x, b.y - a.y) * 0.4;
-    const cp1 = { ...a }, cp2 = { ...b };
-    if (fromSide === "right") cp1.x += dist;
-    else if (fromSide === "left") cp1.x -= dist;
-    else if (fromSide === "bottom") cp1.y += dist;
-    else cp1.y -= dist;
-    if (toSide === "right") cp2.x += dist;
-    else if (toSide === "left") cp2.x -= dist;
-    else if (toSide === "bottom") cp2.y += dist;
-    else cp2.y -= dist;
+    // 項目レベルのアンカーポイント
+    const a = getFieldAnchor(fromEl, r.fromField, fromSide);
+    const b = getFieldAnchor(toEl, r.toField, toSide);
 
-    // パス
+    // 項目行をハイライト（薄い背景色）
+    [fromEl, toEl].forEach((el, idx) => {
+      const fname = idx === 0 ? r.fromField : r.toField;
+      const rows = el.querySelectorAll(".tbl-row");
+      rows.forEach(row => {
+        const colName = row.querySelector(".col-name");
+        if (colName && colName.textContent.includes(fname)) {
+          row.style.borderLeft = `3px solid ${r.color}`;
+          row.style.background = r.color + "10";
+        }
+      });
+    });
+
+    // ベジェ曲線の制御点（水平方向のみ）
+    const gap = Math.abs(b.x - a.x) * 0.4;
+    const cp1x = fromSide === "right" ? a.x + gap : a.x - gap;
+    const cp2x = toSide === "right" ? b.x + gap : b.x - gap;
+
+    // 接続線（項目→項目）薄く
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", `M${a.x},${a.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${b.x},${b.y}`);
+    path.setAttribute("d", `M${a.x},${a.y} C${cp1x},${a.y} ${cp2x},${b.y} ${b.x},${b.y}`);
     path.setAttribute("stroke", r.color);
-    path.setAttribute("stroke-width", "2.5");
+    path.setAttribute("stroke-width", "1.5");
+    path.setAttribute("stroke-dasharray", "6 3");
     path.setAttribute("fill", "none");
     path.setAttribute("marker-end", `url(#ah-${i})`);
-    path.setAttribute("opacity", "0.85");
+    path.setAttribute("opacity", "0.4");
     svg.appendChild(path);
 
-    // ラベル（中央）
-    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    // 接続ドット（始点・終点）
+    [a, b].forEach(pt => {
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("cx", String(pt.x));
+      dot.setAttribute("cy", String(pt.y));
+      dot.setAttribute("r", "3");
+      dot.setAttribute("fill", r.color);
+      dot.setAttribute("opacity", "0.6");
+      svg.appendChild(dot);
+    });
+
+    // テーブルレベルの太い接続線（中心→中心）
+    const fCenter = { x: fromEl.offsetLeft + fromEl.offsetWidth / 2, y: fromEl.offsetTop + fromEl.offsetHeight / 2 };
+    const tCenter = { x: toEl.offsetLeft + toEl.offsetWidth / 2, y: toEl.offsetTop + toEl.offsetHeight / 2 };
+    const fSideX = fromSide === "right" ? fromEl.offsetLeft + fromEl.offsetWidth : fromEl.offsetLeft;
+    const tSideX = toSide === "right" ? toEl.offsetLeft + toEl.offsetWidth : toEl.offsetLeft;
+    const mainA = { x: fSideX, y: fCenter.y };
+    const mainB = { x: tSideX, y: tCenter.y };
+    const mainGap = Math.abs(mainB.x - mainA.x) * 0.4;
+    const mainCp1x = fromSide === "right" ? mainA.x + mainGap : mainA.x - mainGap;
+    const mainCp2x = toSide === "right" ? mainB.x + mainGap : mainB.x - mainGap;
+
+    const mainPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    mainPath.setAttribute("d", `M${mainA.x},${mainA.y} C${mainCp1x},${mainA.y} ${mainCp2x},${mainB.y} ${mainB.x},${mainB.y}`);
+    mainPath.setAttribute("stroke", r.color);
+    mainPath.setAttribute("stroke-width", "2.5");
+    mainPath.setAttribute("fill", "none");
+    mainPath.setAttribute("marker-end", `url(#ah-${i})`);
+    mainPath.setAttribute("opacity", "0.85");
+    svg.appendChild(mainPath);
+
+    // ラベル（太い線の中央）
+    const mx = (mainA.x + mainB.x) / 2, my = (mainA.y + mainB.y) / 2;
     // 背景
     const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     bg.setAttribute("x", mx - 22); bg.setAttribute("y", my - 18);
